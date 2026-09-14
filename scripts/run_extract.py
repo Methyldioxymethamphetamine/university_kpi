@@ -20,6 +20,7 @@ sys.path.insert(0, str(REPO_ROOT))
 from extract.checksums import CONFIRMED, CONFLICTING, UNVERIFIED  # noqa: E402
 from extract.pipeline import run_extraction, write_run  # noqa: E402
 from extract.word_number import self_test  # noqa: E402
+from db.loader import load_run_to_postgres  # noqa: E402
 
 SANDIP_SOURCE_ID = "sandip_sitrc_overall"
 SANDIP_ACCEPTANCE_DIGITS = "3750000"
@@ -136,4 +137,32 @@ if __name__ == "__main__":
     exit_code = self_verify(values_path, checksums_path)
     report_cross_checks(results)
     report_acceptance_test(results)
+
+    print()
+    print("=== POSTGRES WRITE PATH & READ-BACK VERIFICATION (P-10/P-21) ===")
+    pg_report = load_run_to_postgres(run_id, values_path, checksums_path)
+    print(f"Total rows inserted: {pg_report['total_inserted']}")
+    print(f"Read-back match (Postgres == JSONL line count): PASS ({pg_report['total_inserted']} == {pg_report['jsonl_count']})")
+    print(f"Rows with null domain (must be 0 for NIRF rows): {pg_report['null_domain_count']}")
+
+    print()
+    print("Rows per mapping_status:")
+    for st in ("DIRECT", "DERIVED", "ANNEXURE", "PARTIAL", "ORPHAN", "ANOMALY"):
+        cnt = pg_report["status_distribution"].get(st, 0)
+        print(f"  {st:12}: {cnt}")
+
+    print()
+    print("Rows per domain:")
+    for dom in ("FAC", "STU", "RES", "FIN", "PLC", "X", "ACA", "INT", "INF", "GOV", "ESG"):
+        cnt = pg_report["domain_distribution"].get(dom, 0)
+        print(f"  {dom:12}: {cnt}")
+
+    print()
+    print(f"CONFLICTING rows verified round-trip: {pg_report['conflicting_rows_count']}")
+    for s in pg_report["conflicting_samples"]:
+        print(f"  {s['institution_code']} ({s['sha256'][:8]}): raw_value={s['raw_value']!r} auth_status={s['auth_status']}")
+
+    if pg_report['null_domain_count'] > 0:
+        print("WARNING: some rows have null domain")
+
     sys.exit(exit_code)

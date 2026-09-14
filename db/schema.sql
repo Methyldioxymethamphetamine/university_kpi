@@ -87,9 +87,9 @@ CREATE TABLE IF NOT EXISTS mapping_candidate (
 
 CREATE TABLE IF NOT EXISTS value (
     value_id          BIGSERIAL PRIMARY KEY,
-    kpi_code            TEXT NOT NULL,
+    kpi_code            TEXT,
     institution_code      TEXT NOT NULL,
-    period_value            TEXT NOT NULL,
+    period_value            TEXT,
     period_type               TEXT,
     raw_value                  TEXT NOT NULL,
     normalized_value              NUMERIC,
@@ -98,7 +98,11 @@ CREATE TABLE IF NOT EXISTS value (
     profile_id                         TEXT NOT NULL REFERENCES profile(profile_id),
     auth_status                          TEXT NOT NULL CHECK (auth_status IN ('CONFIRMED', 'CONFLICTING', 'UNVERIFIED', 'NOT_APPLICABLE')),
     run_id                                TEXT NOT NULL,
-    confidence                             NUMERIC
+    confidence                             NUMERIC,
+    section                                TEXT,
+    domain                                 TEXT,
+    mapping_status                         TEXT CHECK (mapping_status IN ('DIRECT', 'DERIVED', 'ANNEXURE', 'PARTIAL', 'ORPHAN', 'ANOMALY')),
+    anomaly_reason                         TEXT
 );
 
 -- Deliberately NO UNIQUE(kpi_code, institution_code, period_value) -- see
@@ -111,9 +115,15 @@ CREATE TABLE IF NOT EXISTS value (
 CREATE INDEX IF NOT EXISTS value_kpi_inst_period_idx ON value (kpi_code, institution_code, period_value);
 
 -- Make P-5 structurally impossible on `value`, not merely documented.
+-- UPDATE is unconditionally forbidden across all runs.
+-- DELETE is forbidden across all production/reference runs, and allowed ONLY for
+-- sandbox testing runs where run_id LIKE 'manual_test_%'.
 CREATE OR REPLACE FUNCTION value_no_update_no_delete() RETURNS TRIGGER AS $$
 BEGIN
-    RAISE EXCEPTION 'value is insert-only (P-5): % on value.value_id=% is forbidden', TG_OP, OLD.value_id;
+    IF TG_OP = 'DELETE' AND OLD.run_id LIKE 'manual_test_%' THEN
+        RETURN OLD;
+    END IF;
+    RAISE EXCEPTION 'value is insert-only (P-5): % on value.value_id=% (run_id=%) is forbidden', TG_OP, OLD.value_id, OLD.run_id;
 END;
 $$ LANGUAGE plpgsql;
 

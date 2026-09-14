@@ -72,6 +72,7 @@ def classify_artifact(sha256: str) -> dict:
             png_path = pages_dir / f"{page.page_no:03d}.png"
             render_page_png(raw_path, page.page_no, png_path)
             page_records.append({**record, "png_available": True})
+        page_rotations = {page.page_no: page.rotation for page in pdf_pages}
         n_pages = len(pdf_pages)
     else:
         html_profile = profile_html(raw_path.read_bytes()) if mime == sniff.HTML else None
@@ -87,6 +88,7 @@ def classify_artifact(sha256: str) -> dict:
         }
         (pages_dir / "001.json").write_text(json.dumps(record, indent=2, sort_keys=True), encoding="utf-8")
         page_records = [{**record, "png_available": False}]
+        page_rotations = {1: None}
         n_pages = 1
 
     classify_record = {
@@ -94,6 +96,7 @@ def classify_artifact(sha256: str) -> dict:
         "label": label,
         "n_pages": n_pages,
         "page_char_threshold_used": None,  # filled in only for pdf_* below
+        "page_rotations": {str(k): v for k, v in page_rotations.items()},
         "classified_at": datetime.now(timezone.utc).isoformat(),
     }
     if mime == sniff.PDF:
@@ -103,6 +106,37 @@ def classify_artifact(sha256: str) -> dict:
 
     _write_classify_block(sha256, classify_record)
     return classify_record
+
+
+def get_page_rotations(sha256: str) -> dict[int, int | None]:
+    """Read per-page rotation records for an artifact. Checks manifest's
+    classify or convert block first, and falls back to reading
+    docs/<sha8>/pages/*.json on disk so previously classified artifacts
+    resolve without requiring re-classification.
+    """
+    mpath = manifest_path(sha256)
+    if mpath.exists():
+        try:
+            manifest = json.loads(mpath.read_text(encoding="utf-8"))
+            for block in ("convert", "classify"):
+                rots = manifest.get(block, {}).get("page_rotations")
+                if rots is not None:
+                    return {int(k): v for k, v in rots.items()}
+        except Exception:
+            pass
+
+    # Fallback to reading docs/<sha8>/pages/*.json
+    pages_dir = DOCS_ROOT / sha256[:8] / "pages"
+    rotations: dict[int, int | None] = {}
+    for p in sorted(pages_dir.glob("*.json")):
+        try:
+            pdata = json.loads(p.read_text(encoding="utf-8"))
+            p_no = pdata.get("page_no")
+            if p_no is not None:
+                rotations[int(p_no)] = pdata.get("rotation")
+        except Exception:
+            pass
+    return rotations
 
 
 def _write_classify_block(sha256: str, classify_record: dict) -> None:

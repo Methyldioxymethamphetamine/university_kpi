@@ -87,37 +87,63 @@ def fingerprint_matches(profile: dict, docling_doc: dict) -> bool:
     institution's copy of the form does not match a second institution's
     differently-worded copy of the identical form, P-14 applied one level
     up from column labels), AND the page that anchor is on carries the
-    declared rotation. Geometry (rotation) comes from the table prov page's
-    own record, matching how P2C already reads page_no -- never from
-    re-parsing raw PDF bytes (that would cross back into P-3 territory)."""
+    declared rotation. Geometry (rotation) comes from docling.json pages
+    metadata (which carries the per-page rotation computed upstream via
+    classify/pdf_profile.py's pypdfium2 walk and persisted during conversion)
+    -- never from re-parsing raw PDF bytes (that would cross back into P-3
+    territory)."""
     fp = profile["fingerprint"]
     anchor = fp["text_anchor"]
     match_mode = fp.get("text_anchor_match", "substring")
     texts = docling_doc.get("texts", [])
+    matching_texts = []
     if match_mode == "regex":
         pattern = re.compile(anchor)
-        anchor_hit = any(pattern.search(t.get("text") or "") for t in texts)
+        matching_texts = [t for t in texts if pattern.search(t.get("text") or "")]
     elif match_mode == "substring":
-        anchor_hit = any(anchor in (t.get("text") or "") for t in texts)
+        matching_texts = [t for t in texts if anchor in (t.get("text") or "")]
     else:
         raise ValueError(f"unknown fingerprint.text_anchor_match {match_mode!r}")
-    if not anchor_hit:
+    if not matching_texts:
         return False
 
-    # [VERIFIED, this session] docs/<sha8>/docling.json's pages{} carries
-    # only {page_no, size}, no rotation flag -- checked directly against
-    # docs/d2c9d5c2/docling.json before writing this function. The
-    # fingerprint's declared page_rotation: 90 therefore cannot be checked
-    # against this artifact; P2B's conversion already resolved rotation
-    # upstream (P1 CHECK C / gate/P2C-extract.md Sec2), so a matched table
-    # grid with correct label-to-value association is itself evidence
-    # rotation was handled, just not a field this function can read back.
-    # Falling back to text_anchor alone rather than silently treating an
-    # unreadable field as a pass -- flagged here, not assumed. [OPEN]:
-    # confirm/overturn by checking a future Docling version's page schema
-    # for a rotation field before relying on this fingerprint for a
-    # genuinely-scanned-sideways document.
-    return True
+    declared_rotation = fp.get("page_rotation")
+    if declared_rotation is None:
+        # Profile does not declare a rotation requirement (e.g. HTML sources
+        # like US CDS where page rotation is inapplicable).
+        return True
+
+    pages = docling_doc.get("pages", {})
+    # Enforce declared page_rotation against the page(s) where the anchor was found.
+    # Matching text prov gives the 1-indexed page_no.
+    anchor_on_matching_page = False
+    for t in matching_texts:
+        prov = t.get("prov") or []
+        for p in prov:
+            p_no = p.get("page_no")
+            if p_no is not None:
+                page_entry = pages.get(str(p_no)) or pages.get(p_no) or {}
+                page_rot = page_entry.get("page_rotation")
+                if page_rot is None:
+                    page_rot = page_entry.get("rotation")
+                if page_rot == declared_rotation:
+                    anchor_on_matching_page = True
+                    break
+        if anchor_on_matching_page:
+            break
+
+    # If anchor text items carried no provenance (e.g. synthetic or test dicts),
+    # fall back to checking if pages carry the declared rotation.
+    if not anchor_on_matching_page and not any(t.get("prov") for t in matching_texts):
+        for p_key, page_entry in pages.items():
+            page_rot = page_entry.get("page_rotation")
+            if page_rot is None:
+                page_rot = page_entry.get("rotation")
+            if page_rot == declared_rotation:
+                anchor_on_matching_page = True
+                break
+
+    return anchor_on_matching_page
 
 
 def _classify_dash_state(raw: str) -> tuple[str, float | None]:
