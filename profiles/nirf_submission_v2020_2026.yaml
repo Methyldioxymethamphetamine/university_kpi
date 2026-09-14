@@ -1,0 +1,118 @@
+# P2E profile — proof that P2C's hand-written NIRF extraction can be
+# expressed declaratively (PROMPTS.md P2E, first task: "confirm it produces
+# byte-identical value rows to the hand-written version").
+#
+# This profile intentionally encodes NOTHING that extract/docling_source.py
+# + extract/values.py + extract/checksums.py did not already do. It is a
+# restatement, not a redesign -- see profiles/engine.py's self-check against
+# the P2C run, and gate/P2E-profiles.md Sec1 for the actual diff output.
+#
+# Why one block, not one per NIRF section (Sanctioned Intake, Placement,
+# Faculty, ...): the form has no section-header text stable enough to key
+# on across years (P-14 forbids label-text anchors anyway), and P2C's own
+# code never needed one -- every table in the document shares one grid
+# geometry (single header row, column 0 = label). Splitting this into
+# per-section blocks would be inventing structure the hand-written version
+# never used, which is exactly the "escape hatch for special fields" the
+# phase brief says not to add.
+
+profile_id: nirf_submission_v2020_2026
+description: >
+  NIRF Data Capturing System Overall/Engineering submission form. Verified
+  stable 2020-2026 across institution, category and institution type
+  (University/College) -- findings/iteration-1-source-investigation.md
+  Sec2.6. Fitted on IIT Bombay's 2024 and 2025 Overall submissions, and
+  (gate/P2E-profiles.md 2026-09-14 (v4)) confirmed byte-identical on
+  Sandip's real 2024 and 2025 Overall submissions once the fingerprint
+  below was fixed to stop keying on IIT Bombay's specific portal-copy
+  header phrasing.
+
+fingerprint:
+  # 2026-09-14 (v4) FIX, per P-14 ("anchor on section, locate by geometry,
+  # use label text only to verify" -- applied here one level up, at the
+  # document-identification level rather than the column-label level).
+  #
+  # The original text_anchor was "Data Submitted by Institution for India
+  # Rankings" -- IIT Bombay's NIRF-*portal*-copy phrasing, exact-substring
+  # matched. It never matched Sandip's *own-site* copy of the identical
+  # form, which reads "Submitted Institute Data for NIRF'2025'" instead --
+  # same form, same underlying concept, different institution's exact
+  # wording (gate/P2E-profiles.md 2026-09-14 (v3), the first session with a
+  # second institution's real document to expose the gap).
+  #
+  # Fix: match on the NIRF Data Capturing System's own structural artifact
+  # instead of any institution-authored prose sentence -- the "Institute
+  # Name: <name> [<NIRF institution code>]" line the form generator itself
+  # emits, in the same shape, in literally every submission this project
+  # has ever seen, regardless of institution, year, category or which
+  # copy (portal vs. own-site) is being read. This is not "shorter prose
+  # that happens to be shared" -- the bracketed code
+  # (IR-<category>-<type>-<number>, e.g. [IR-O-U-0306], [IR-O-C-41520]) is
+  # a fixed government-form field, not a sentence an institution could
+  # choose to phrase differently. Checked directly, not assumed: IIT
+  # Bombay's docling.json contains the literal substring "NIRF" ZERO times
+  # (its header says "India Rankings", not "NIRF") -- so "NIRF" alone, or
+  # "NIRF" + the bracket pattern as an AND condition, would have *failed*
+  # on IIT Bombay. The bracket-ID pattern alone is the only substring
+  # confirmed present, verbatim, in all 4 pdf_digital artifacts acquired
+  # so far (2x IIT Bombay, 2x Sandip).
+  text_anchor: 'Institute Name:.*\[IR-[A-Z]-[A-Z]-\d+\]'
+  text_anchor_match: regex   # re.search, case-sensitive, against each texts[].text item individually (DOTALL off -- must be one line/item)
+  page_rotation: 90          # from docling.json pages[*] / table prov -- see profiles/engine.py's own [OPEN] note, unchanged by this fix
+  match_strictness: text_anchor_regex_present_on_any_text_item
+
+blocks:
+  - block_id: nirf_table_grid
+    anchor: ANY_TABLE   # applies uniformly -- see header note above
+    geometry:
+      # Exactly extract/docling_source.py's header_rows logic: a row counts
+      # as THE header row only if it is the single row where every cell is
+      # flagged column_header by Docling's own TableFormer layout model
+      # (never by text match -- P-14).
+      header_row_rule: single_row_where_every_cell_is_column_header
+      label_column_index: 0
+    columns:
+      role:
+        # Order matters: column 0 is always label (geometric convention,
+        # extract/values.py build_value_row -- flagged [R] in
+        # gate/P2C-extract.md Sec8, since row_header was empirically False
+        # even for genuine label cells here). Header-row / row-header
+        # flagged cells are label regardless of column. Everything else is
+        # a value.
+        column_index_0: label
+        column_header_flagged: label
+        row_header_flagged: label
+        default: value
+      period:
+        source: header_row_cell_text_at_same_column_index
+        rules:
+          - period_type: academic_year
+            regex: '^\d{4}-\d{2,4}$'
+          - period_type: calendar_year
+            regex: '^(19|20)\d{2}$'
+        # Both period_type and period_value are None together when neither
+        # regex matches -- never invented (P-9).
+      dash_state:
+        empty: EMPTY
+        dash_only: DASH        # regex ^-+$
+        pure_zero: ZERO
+        pure_number: NUMBER
+        other: TEXT            # includes digits(words) compounds
+      kpi_code: null
+      # No kpi_code on this profile's columns. P2C never assigned one
+      # (forbidden that phase, P-16/P2C scope) and this proof profile
+      # exists to match P2C's output exactly, not to add a mapping pass
+      # this profile was never asked to prove. kpi_code assignment is a
+      # discovery/review concern (T2), separate from "learn once" geometry.
+    checksum_rule:
+      pattern: digits_words_compound   # (\d[\d,]{2,})\s*\(([^()]{4,220}?)\)
+      applies_to: every_cell_regardless_of_role
+      # Same discipline as extract/checksums.py: scans every cell, not just
+      # ones flagged as values, because a layout-model mislabel must never
+      # suppress a checksum-relevant cell.
+
+partial_match:
+  # PROMPTS.md P2E: "Known anchor, unknown blocks: apply the known blocks,
+  # queue the unknown ones, mark the run PROFILE_INCOMPLETE."
+  policy: unknown_block_within_matched_fingerprint_is_queued_not_dropped
+  never_presented_as_exhaustive: true

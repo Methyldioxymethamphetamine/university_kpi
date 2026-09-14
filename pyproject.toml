@@ -12,6 +12,9 @@ dependencies = [
   "psycopg[binary]>=3.2",
   "pyyaml>=6",
   "pydantic>=2",
+  "filetype>=1.2",
+  "openpyxl>=3.1",
+  "flask>=3.1",
 ]
 
 [project.optional-dependencies]

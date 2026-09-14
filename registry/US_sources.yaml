@@ -1,0 +1,42 @@
+# Source registry — United States.
+#
+# Same rule as registry/IN_sources.yaml: a source is DATA, not code. The
+# SourceRegistry loads every registry/*_sources.yaml it finds -- adding this
+# file is what "the US side is a config change" (findings/
+# iteration-1-source-investigation.md §3.4) actually means in code: no new
+# Python, a new file matched by the same glob.
+#
+# MIT's Common Data Set has no single URL template across years the way
+# NIRF's PDF path does -- each year is its own project page under
+# ir.mit.edu/projects/, and the slug is only knowable by visiting the site
+# (no enumerable ID). Rather than fabricate a "pattern" with a fake
+# enumerator to force it into that shape, each year is its own adhoc_url
+# entry -- a pasted link is a registry entry, per PROMPTS.md P2A. Both URLs
+# below were fetched directly and returned 200 text/html during P2A.
+# [VERIFIED, 2026-09-14]
+
+country: US
+
+sources:
+
+  - source_id: mit_common_data_set_2025_26
+    type: adhoc_url
+    institution_code: MIT
+    institution_name: Massachusetts Institute of Technology
+    url: "https://ir.mit.edu/projects/2025-26-common-data-set/"
+    expected_content_type: text/html
+    period_type: academic_year
+    period_value: "2025-26"
+    robots_checked_at: null      # [OPEN]
+    terms_reviewed_at: null      # [OPEN]
+
+  - source_id: mit_common_data_set_2024_25
+    type: adhoc_url
+    institution_code: MIT
+    institution_name: Massachusetts Institute of Technology
+    url: "https://ir.mit.edu/projects/2024-25-common-data-set/"
+    expected_content_type: text/html
+    period_type: academic_year
+    period_value: "2024-25"
+    robots_checked_at: null      # [OPEN]
+    terms_reviewed_at: null      # [OPEN]

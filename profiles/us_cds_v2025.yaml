@@ -1,0 +1,91 @@
+# Emitted from a completed T2 review (scripts/run_p2e_t2.py, review queue at
+# review/queue/mit_cds_2025_26_dc2701ee.jsonl) -- PROMPTS.md P2E: "saving a
+# completed review emits a reusable profile."
+#
+# PROFILE_INCOMPLETE: of 788 candidate cells reviewed, 0 were CONFIRMED or
+# RE-ASSIGNED, 17 were MARK_PARTIAL (three KPI codes, none as a direct
+# value -- see notes on each block below), and 771 are NO_KPI_HOME. This
+# profile's block list below is therefore a small, explicitly incomplete
+# fragment of MIT's actual CDS structure (which has ~780 fields), not a
+# claim that the other 771 fields are worthless -- they are unmapped
+# against a 24-code PARTIAL dictionary (see caveat in each block), which is
+# a property of the dictionary available this session, not of the document.
+# Per PROMPTS.md P2E's PARTIAL MATCH rule: "output from an incomplete run
+# must never be presented as exhaustive."
+
+profile_id: us_cds_v2025
+description: >
+  US Common Data Set, MIT's ir.mit.edu-published HTML rendering. Built by
+  discovery + human review against MIT's 2025-26 CDS (gate/P2E-profiles.md
+  Sec4), not fitted to a second CDS document from a different institution --
+  iteration 1 has only one US source. [ASSUMED] section letter/number
+  structure (I-2, I-3, C1, ...) is a CDS-wide standard, not MIT-specific,
+  but this is not independently verified against a second institution's CDS
+  in this run.
+
+fingerprint:
+  text_anchor: "Common Data Set"
+  text_anchor_match: substring
+  page_rotation: null   # HTML has no page rotation concept (classify/html_profile.py)
+  match_strictness: text_anchor_present
+
+status: PROFILE_INCOMPLETE
+
+blocks:
+  - block_id: admission_funnel_first_time_first_year
+    anchor: "Total first-time, first-year"
+    geometry:
+      # Unlike the NIRF profile, MIT's CDS tables are label:value pairs
+      # with the label spanning multiple cells (row_label + column_label
+      # concatenated) rather than one universal grid -- documented here as
+      # the discovery mechanism found it, not designed in advance.
+      label_source: row_label_plus_column_label
+    columns:
+      - source_label: "Total first-time, first-year who applied TOTAL"
+        role: value
+        kpi_code: S10
+        status: PARTIAL
+        note: "Denominator of Acceptance rate. See review queue note -- a smaller, differently-scoped 'Total Applicants' cluster elsewhere in this document was deliberately left NO_KPI_HOME."
+      - source_label: "Total first-time, first-year who were admitted TOTAL"
+        role: value
+        kpi_code: S10
+        status: PARTIAL
+        note: "Numerator of Acceptance rate, also denominator of Yield rate (S11). 1,334/29,281 = 4.56%."
+      - source_label: "Total first-time, first-year enrolled TOTAL"
+        role: value
+        kpi_code: S11
+        status: PARTIAL
+        note: "Numerator of Yield rate. 1,152/1,334 = 86.4%."
+
+  - block_id: undergraduate_class_size
+    anchor: "Undergraduate Class Size"
+    geometry:
+      label_source: row_label_plus_column_label
+    columns:
+      - source_label: "CLASS SECTIONS {bucket}"
+        buckets: ["2-9", "10-19", "20-29", "30-39", "40-49", "50-99", "100+"]
+        role: value
+        kpi_code: A17
+        status: PARTIAL
+        note: "Section-count distribution, not an average. No weighting formula applied this session -- see review queue."
+      - source_label: "CLASS SUBSECTIONS {bucket}"
+        buckets: ["2-9", "10-19", "20-29", "30-39", "40-49", "50-99", "100+"]
+        role: value
+        kpi_code: A17
+        status: PARTIAL
+        note: "Same as CLASS SECTIONS; CDS defines sections and subsections as different units, not combined here."
+
+not_yet_mapped:
+  count: 771
+  reason: >
+    Reviewed individually (review/queue/mit_cds_2025_26_dc2701ee.jsonl) and
+    found to have zero real overlap with the 24-code PARTIAL KPI dictionary
+    available this session -- either a token-overlap false positive (e.g.
+    "Class rank Considered" scoring against QS/THE/NIRF rank codes on the
+    shared word "rank" alone) or a genuine concept the partial dictionary
+    has no code for (financial aid detail, faculty demographic breakdowns,
+    admissions-factor-importance checkboxes, ...). Re-running discovery
+    against the real 229-row KPI_Dictionary, once it is committed to this
+    repo, would very likely raise both the PARTIAL and NO_KPI_HOME-but-
+    orphan counts -- this is a floor, not a ceiling (same discipline as
+    gate/P2C-extract.md's own [OPEN] items).

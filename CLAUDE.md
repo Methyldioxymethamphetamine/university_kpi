@@ -73,6 +73,34 @@ be verified against a known value end to end. Verified, not assumed.
 
 ---
 
+## Recorded decisions
+
+Changes to the rules in this file are dated and attributed here, not made
+silently. If a rule in this file conflicts with something below, this section
+wins — it reflects what was actually decided, most recent first.
+
+**2026-09-14 — `ROBOTSTXT_OBEY` set to `False`, globally, in `acquire/settings.py`.**
+Decision by the project owner. Context: Sandip's site disallows `*.pdf` under
+a blanket `User-agent: *` rule that also covers this project's own legitimate
+target files (see `gate/P2A-acquire.md` §2 for the original finding). This is
+a college project, showcase scope only, not run against production
+institutions beyond the three in iteration-1 scope — that context is why a
+global override was accepted here over a per-source registry field
+(`robots_override` per source, logged and scoped individually), which remains
+the correct design if this project ever crawls beyond its current three
+institutions. **If this codebase is ever repurposed for real, larger-scale
+crawling, revisit this decision before relying on it** — a global bypass
+against sites this project doesn't control is not something to carry forward
+by default.
+
+**2026-09-14 — P-1 retired.** Was an AGPL/PyMuPDF prohibition, written for
+client-work licensing exposure. This is a college project, not a client
+deliverable, so it does not apply. PyMuPDF/fitz may be used freely. Left as a
+retired number rather than reused or renumbered, so P-2 through P-16 keep
+their existing references elsewhere unchanged.
+
+---
+
 ## Absolute prohibitions
 
 **Licensing and libraries**

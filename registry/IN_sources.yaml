@@ -45,13 +45,32 @@ sources:
     params:
       origin: "https://sitrc.sandipfoundation.org"
       q: nirf
+    # NOT a templated filter. Fetching the real media API during P2A
+    # [VERIFIED, 2026-09-14] showed the filename/title convention is NOT
+    # stable across years: 2025 is "NIRF Report 2025_Overall" but 2024 is
+    # "Submitted Institute Data for NIRF 2024 _Overall" -- a single
+    # "NIRF-Report-{year}_Overall" template (the original draft here) matches
+    # 2025 and silently matches nothing for 2024. Per P-12, each substring
+    # below was read off an actual fetched response, not guessed or
+    # extrapolated from the 2025 shape.
     enumerator:
-      filter: "NIRF-Report-{year}_Overall"
-      years: [2024, 2025]
+      matches:
+        - year: 2025
+          title_contains: "NIRF Report 2025_Overall"
+        - year: 2024
+          title_contains: "Submitted Institute Data for NIRF 2024 _Overall"
     expected_content_type: application/pdf
     period_type: academic_year
     robots_checked_at: null      # [OPEN]
     terms_reviewed_at: null      # [OPEN]
+    # [VERIFIED, 2026-09-14] sitrc.sandipfoundation.org/robots.txt disallows
+    # "*.pdf" and "/pdf/" for User-agent: * (confirmed against the real
+    # robots.txt with protego, the library Scrapy's RobotsTxtMiddleware
+    # uses). The /wp-json/wp/v2/media discovery call above is NOT blocked;
+    # the actual PDF download that the discovery call points to IS blocked.
+    # With ROBOTSTXT_OBEY=True (required by PROMPTS.md P2A) this source's
+    # PDF cannot be fetched at all under this or any other well-behaved
+    # user agent. See gate/P2A-acquire.md for the full finding.
 
   # Example of the second entry type. A pasted link is a registry entry.
   # - source_id: adhoc_example

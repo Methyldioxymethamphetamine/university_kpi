@@ -282,9 +282,15 @@ These are unresolved by design. Do not let anyone quietly close them by guessing
 - **Sandip and MIT acquisition paths** are documented but untested end to end.
   Sandip is unranked, so the WordPress `/wp-json/wp/v2/media` route is the only
   way in. MIT is HTML, not PDF. Expect P2A to take longer than it looks.
-- **Terms of use at scale.** Fine at three institutions, a real question at 537.
-  The registry has `robots_checked_at` and `terms_reviewed_at` fields. A human
-  fills those before any full run. Claude Code must leave them null.
+- **Terms of use at scale.** `ROBOTSTXT_OBEY` was set to `False` globally on
+  2026-09-14 (see `CLAUDE.md` "Recorded decisions") to unblock Sandip's file,
+  accepted specifically because this stays a college-scope, three-institution
+  showcase. **If this project ever crawls beyond its current three
+  institutions, this decision must be revisited before relying on it** — a
+  global robots bypass does not belong in anything larger. The registry's
+  `robots_checked_at` / `terms_reviewed_at` fields are still present for that
+  future reckoning; a human fills those before any full run, and Claude Code
+  must leave them null in the meantime.
 - **Three KPIs marked `Context`** (`FIN02`, `FIN07`, `FIN10`) need a client
   decision on direction. Do not assign them to make a gap engine work.
 - **`A09` review frequency** direction is genuinely ambiguous (`years` as unit vs
