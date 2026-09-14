@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>NIRF Benchmarking — Review Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EFF1EC;
+    --panel:#FFFFFF;
+    --panel-alt:#F6F7F3;
+    --ink:#1B231F;
+    --ink-soft:#5C6560;
+    --ink-faint:#8A9089;
+    --rule:#D7DAD1;
+    --rule-strong:#B9BEB3;
+    --accent:#A8791E;
+    --accent-soft:#F1E6CE;
+    --ok:#2E6B4C;
+    --ok-soft:#E3EDE6;
+    --bad:#B4432A;
+    --bad-soft:#F5E4DE;
+    --neutral:#8A8578;
+    --neutral-soft:#EDEBE4;
+    --derived:#3B6E71;
+    --derived-soft:#E1EBEA;
+    --annexure:#6B4F6B;
+    --annexure-soft:#EAE3EA;
+    --serif: 'Source Serif 4', Georgia, serif;
+    --sans: 'IBM Plex Sans', -apple-system, sans-serif;
+    --mono: 'IBM Plex Mono', 'SF Mono', monospace;
+    --radius: 3px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--paper);color:var(--ink);font-family:var(--sans);}
+  body{font-size:14px;line-height:1.5;}
+  a{color:inherit;}
+
+  /* ---- shell ---- */
+  .shell{display:flex;min-height:100vh;}
+  .sidebar{
+    width:230px;flex:0 0 230px;background:var(--ink);color:#EEEFE9;
+    display:flex;flex-direction:column;position:sticky;top:0;height:100vh;
+  }
+  .brand{padding:22px 20px 16px;border-bottom:1px solid rgba(255,255,255,0.12);}
+  .brand-mark{font-family:var(--serif);font-size:16px;font-weight:600;letter-spacing:.2px;line-height:1.25;}
+  .brand-sub{font-family:var(--mono);font-size:10.5px;color:#A9AFA5;margin-top:5px;letter-spacing:.02em;}
+  nav.mainnav{padding:14px 10px;flex:1;}
+  .nav-group-label{font-size:10.5px;color:#8D9389;padding:14px 10px 6px;letter-spacing:.03em;}
+  .nav-group-label:first-child{padding-top:4px;}
+  .navitem{
+    display:flex;align-items:center;gap:10px;width:100%;text-align:left;
+    padding:9px 10px;border-radius:var(--radius);border:none;background:transparent;
+    color:#D7DAD1;font-family:var(--sans);font-size:13px;cursor:pointer;margin-bottom:1px;
+  }
+  .navitem:hover{background:rgba(255,255,255,0.06);}
+  .navitem.active{background:rgba(168,121,30,0.22);color:#F3E4C4;}
+  .navitem .n{font-family:var(--mono);font-size:10.5px;color:#8D9389;width:14px;flex:0 0 14px;}
+  .navitem.active .n{color:var(--accent);}
+  .sidebar-foot{padding:16px 20px 20px;border-top:1px solid rgba(255,255,255,0.12);font-size:11.5px;color:#8D9389;}
+
+  .main{flex:1;min-width:0;}
+  .topbar{
+    background:var(--panel);border-bottom:1px solid var(--rule);
+    padding:16px 36px;display:flex;align-items:center;justify-content:space-between;
+    position:sticky;top:0;z-index:5;
+  }
+  .topbar h1{font-family:var(--serif);font-weight:600;font-size:21px;margin:0;}
+  .topbar .desc{color:var(--ink-soft);font-size:12.5px;margin-top:3px;}
+  .content{padding:32px 36px 80px;max-width:1180px;}
+
+  .view{display:none;}
+  .view.active{display:block;}
+
+  /* ---- doc switcher ---- */
+  .docswitch{display:flex;gap:6px;}
+  .docbtn{
+    font-family:var(--sans);font-size:12.5px;padding:7px 13px;border-radius:var(--radius);
+    border:1px solid var(--rule-strong);background:var(--panel);color:var(--ink-soft);cursor:pointer;
+  }
+  .docbtn.active{background:var(--ink);color:#F3E4C4;border-color:var(--ink);}
+
+  /* ---- generic components ---- */
+  .stats-row{display:flex;gap:1px;background:var(--rule);border:1px solid var(--rule);margin-bottom:28px;border-radius:var(--radius);overflow:hidden;}
+  .stat{background:var(--panel);flex:1;padding:16px 18px;}
+  .stat .num{font-family:var(--serif);font-size:26px;font-weight:600;}
+  .stat .lbl{font-size:11.5px;color:var(--ink-soft);margin-top:3px;}
+
+  table.reg{width:100%;border-collapse:collapse;background:var(--panel);}
+  table.reg th{
+    text-align:left;font-size:11px;font-weight:500;color:var(--ink-soft);
+    padding:9px 14px;border-bottom:1px solid var(--rule-strong);white-space:nowrap;
+  }
+  table.reg td{padding:11px 14px;border-bottom:1px solid var(--rule);font-size:13px;vertical-align:top;}
+  table.reg tr:last-child td{border-bottom:none;}
+  table.reg tbody tr:hover{background:var(--panel-alt);}
+  .mono{font-family:var(--mono);font-size:12px;}
+  .status-line{display:flex;align-items:center;gap:6px;}
+  .dot{width:7px;height:7px;border-radius:50%;flex:0 0 7px;}
+  .dot.ok{background:var(--ok);} .dot.bad{background:var(--bad);} .dot.neutral{background:var(--neutral);}
+  .dot.derived{background:var(--derived);} .dot.annexure{background:var(--annexure);} .dot.accent{background:var(--accent);}
+
+  .badge{
+    display:inline-flex;align-items:center;gap:5px;font-size:11px;font-family:var(--sans);
+    padding:3px 8px 3px 6px;border-radius:12px;font-weight:500;white-space:nowrap;
+  }
+  .badge.ok{background:var(--ok-soft);color:var(--ok);}
+  .badge.bad{background:var(--bad-soft);color:var(--bad);}
+  .badge.neutral{background:var(--neutral-soft);color:#6B6E63;}
+  .badge.derived{background:var(--derived-soft);color:var(--derived);}
+  .badge.annexure{background:var(--annexure-soft);color:var(--annexure);}
+  .badge.accent{background:var(--accent-soft);color:#8C6414;}
+
+  h2.section-h{font-family:var(--serif);font-size:18px;font-weight:600;margin:0 0 4px;}
+  .section-sub{color:var(--ink-soft);font-size:12.5px;margin:0 0 16px;}
+  .panel{background:var(--panel);border:1px solid var(--rule);border-radius:var(--radius);margin-bottom:24px;}
+  .panel-head{padding:14px 18px;border-bottom:1px solid var(--rule);display:flex;justify-content:space-between;align-items:center;}
+  .panel-head h3{font-family:var(--serif);font-size:15px;font-weight:600;margin:0;}
+  .panel-body{padding:18px;}
+
+  .src-cite{font-family:var(--mono);font-size:11px;color:var(--ink-faint);}
+  a.cite-link{font-family:var(--mono);font-size:11.5px;color:var(--derived);text-decoration:none;border-bottom:1px dotted var(--derived);}
+  a.cite-link:hover{border-bottom-style:solid;}
+  .cite-pending{font-family:var(--mono);font-size:11.5px;color:var(--ink-faint);font-style:italic;}
+  .cite-local{font-family:var(--mono);font-size:11.5px;color:var(--ink-soft);}
+
+  details.reveal{margin-top:14px;border-top:1px dashed var(--rule-strong);padding-top:12px;}
+  details.reveal summary{cursor:pointer;font-size:12.5px;color:var(--derived);list-style:none;}
+  details.reveal summary::before{content:"▸ ";}
+  details.reveal[open] summary::before{content:"▾ ";}
+  details.reveal .garbled{
+    margin-top:10px;background:#FBF3EF;border:1px solid #E7CFC2;border-radius:var(--radius);
+    padding:12px 14px;font-family:var(--mono);font-size:11.5px;line-height:1.7;color:#8A4B33;white-space:pre-wrap;
+  }
+
+  /* extraction browser layout */
+  .ext-grid{display:grid;grid-template-columns:220px 1fr;gap:20px;}
+  .domlist{background:var(--panel);border:1px solid var(--rule);border-radius:var(--radius);overflow:hidden;height:fit-content;}
+  .domitem{
+    display:flex;justify-content:space-between;padding:10px 14px;font-size:12.5px;
+    border-bottom:1px solid var(--rule);cursor:pointer;color:var(--ink-soft);
+  }
+  .domitem:last-child{border-bottom:none;}
+  .domitem.active{background:var(--panel-alt);color:var(--ink);font-weight:500;}
+  .domitem .ct{font-family:var(--mono);color:var(--ink-faint);font-size:11px;}
+
+  table.extract{width:100%;border-collapse:collapse;}
+  table.extract th{background:var(--panel-alt);font-family:var(--mono);font-size:11px;font-weight:500;
+    text-align:right;padding:8px 12px;border:1px solid var(--rule);color:var(--ink-soft);}
+  table.extract th:first-child{text-align:left;}
+  table.extract td{font-family:var(--mono);font-size:12.5px;text-align:right;padding:8px 12px;border:1px solid var(--rule);}
+  table.extract td:first-child{text-align:left;font-family:var(--sans);}
+
+  .rot-badge{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:var(--ok);
+    background:var(--ok-soft);padding:4px 10px;border-radius:12px;margin-left:10px;}
+
+  /* orphan groups */
+  .orphan-group{margin-bottom:4px;}
+  .orphan-group-head{display:flex;justify-content:space-between;padding:12px 18px;background:var(--panel-alt);
+    border-bottom:1px solid var(--rule);border-top:1px solid var(--rule);cursor:default;}
+  .orphan-group-head h4{margin:0;font-family:var(--sans);font-weight:600;font-size:13px;}
+  .orphan-group-head .ct{font-family:var(--mono);font-size:11px;color:var(--ink-soft);}
+  .orphan-list{padding:0;}
+  .orphan-row{display:flex;justify-content:space-between;padding:10px 18px;border-bottom:1px solid var(--rule);font-size:12.5px;gap:20px;}
+  .orphan-row .field{color:var(--ink);}
+  .orphan-row .why{color:var(--ink-soft);text-align:right;max-width:340px;}
+
+  /* president brief */
+  .brief{background:var(--panel);border-radius:6px;padding:56px 64px;border:1px solid var(--rule);}
+  .brief-eyebrow{font-family:var(--mono);font-size:11.5px;color:var(--ink-faint);margin-bottom:18px;}
+  .hero-num{display:flex;align-items:baseline;gap:22px;flex-wrap:wrap;}
+  .hero-figure{font-family:var(--serif);font-size:64px;font-weight:600;line-height:1;}
+  .hero-figure.small{font-size:40px;color:var(--ink-soft);}
+  .hero-x{font-family:var(--serif);font-size:28px;color:var(--ink-faint);}
+  .hero-caption{font-size:15px;color:var(--ink-soft);margin-top:18px;max-width:560px;line-height:1.6;}
+  .hero-tenx{display:inline-block;background:var(--bad-soft);color:var(--bad);font-family:var(--mono);
+    font-size:12px;padding:4px 10px;border-radius:12px;margin-top:16px;}
+  .brief-source{margin-top:22px;font-family:var(--mono);font-size:11px;color:var(--ink-faint);}
+  .brief-support{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--rule);
+    margin-top:44px;border:1px solid var(--rule);border-radius:var(--radius);overflow:hidden;}
+  .support-cell{background:var(--panel);padding:22px 20px;}
+  .support-cell .n{font-family:var(--serif);font-size:24px;font-weight:600;}
+  .support-cell .t{font-size:12px;color:var(--ink-soft);margin-top:6px;line-height:1.5;}
+
+  .flag-row{background:#FBF3EF !important;}
+  .corrob{margin-top:8px;padding:10px 12px;background:var(--panel-alt);border-radius:var(--radius);font-size:11.5px;color:var(--ink-soft);}
+  .corrob .mono{color:var(--ink);}
+
+  .hint{font-size:12px;color:var(--ink-faint);margin-top:10px;}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">NIRF Benchmarking</div>
+      <div class="brand-sub">Review Prototype — Iteration 1</div>
+    </div>
+    <nav class="mainnav">
+      <div class="nav-group-label">Overview</div>
+      <button class="navitem active" data-view="dashboard"><span class="n">01</span> Dashboard</button>
+
+      <div class="nav-group-label">Four layers</div>
+      <button class="navitem" data-view="extraction"><span class="n">02</span> Extraction Browser</button>
+      <button class="navitem" data-view="mapping"><span class="n">03</span> Dictionary Mapping</button>
+      <button class="navitem" data-view="orphans"><span class="n">04</span> Orphan Concepts</button>
+      <button class="navitem" data-view="validation"><span class="n">05</span> Validation &amp; Checksum</button>
+
+      <div class="nav-group-label">Client-facing</div>
+      <button class="navitem" data-view="brief"><span class="n">06</span> President Brief</button>
+    </nav>
+    <div class="sidebar-foot">Mockup only — no live data.<br>Content drawn from source-investigation findings.</div>
+  </aside>
+
+  <div class="main">
+
+    <!-- ============ DASHBOARD ============ -->
+    <div class="view active" id="view-dashboard">
+      <div class="topbar">
+        <div>
+          <h1>Dashboard</h1>
+          <div class="desc">Iteration 1 fixture set — 8 institutions, Overall &amp; Engineering categories</div>
+        </div>
+      </div>
+      <div class="content">
+        <div class="stats-row">
+          <div class="stat"><div class="num">8</div><div class="lbl">documents in scope</div></div>
+          <div class="stat"><div class="num">2 / 8</div><div class="lbl">fully parsed</div></div>
+          <div class="stat"><div class="num">29</div><div class="lbl">KPI codes populatable / doc</div></div>
+          <div class="stat"><div class="num">11</div><div class="lbl">checksum disagreements found</div></div>
+          <div class="stat"><div class="num">39</div><div class="lbl">orphan concepts (no KPI home)</div></div>
+        </div>
+
+        <h2 class="section-h">Fixture documents</h2>
+        <p class="section-sub">The set this iteration is scored against. Bar for done: zero exceptions, zero silent mis-ordering, the known checksum discrepancy surfaces automatically.</p>
+
+        <div class="panel">
+          <table class="reg">
+            <thead><tr>
+              <th>Institution</th><th>Category</th><th>Year</th><th>Source ID</th><th>Pages</th>
+              <th>Status</th><th>KPIs mapped</th><th>Checksum flags</th><th>Evidence</th>
+            </tr></thead>
+            <tbody>
+              <tr>
+                <td>IIT Bombay</td><td>Overall</td><td>2025</td><td class="mono">IR-O-U-0306</td><td>4</td>
+                <td><span class="badge ok"><span class="dot ok"></span>Parsed</span></td>
+                <td>29</td><td>0 of 29</td>
+                <td><a class="cite-link" href="https://www.nirfindia.org/nirfpdfcdn/2025/pdf/Overall/IR-O-U-0306.pdf" target="_blank" rel="noopener">source PDF ↗</a></td>
+              </tr>
+              <tr>
+                <td>Sandip (SITRC)</td><td>Overall</td><td>2025</td><td class="mono">IR-O-C-41520</td><td>13</td>
+                <td><span class="badge ok"><span class="dot ok"></span>Parsed</span></td>
+                <td>35</td><td>6 of 97</td>
+                <td><a class="cite-link" href="https://sitrc.sandipfoundation.org/wp-content/uploads/2025/02/NIRF-Report-2025_Overall.pdf" target="_blank" rel="noopener">source PDF ↗</a></td>
+              </tr>
+              <tr>
+                <td>IIT Madras</td><td>Engineering</td><td>2025</td><td class="mono">IR-E-U-0629</td><td>—</td>
+                <td><span class="badge neutral"><span class="dot neutral"></span>Queued</span></td>
+                <td>—</td><td>—</td>
+                <td><span class="cite-pending">pending fetch</span></td>
+              </tr>
+              <tr>
+                <td>IIT Delhi</td><td>Engineering</td><td>2025</td><td class="mono">IR-E-U-0537</td><td>—</td>
+                <td><span class="badge neutral"><span class="dot neutral"></span>Queued</span></td>
+                <td>—</td><td>—</td>
+                <td><span class="cite-pending">pending fetch</span></td>
+              </tr>
+              <tr>
+                <td>BITS Pilani</td><td>Engineering</td><td>2025</td><td class="mono">IR-E-U-0125</td><td>—</td>
+                <td><span class="badge neutral"><span class="dot neutral"></span>Queued</span></td>
+                <td>—</td><td>—</td>
+                <td><span class="cite-pending">pending fetch</span></td>
+              </tr>
+              <tr>
+                <td>Thapar Institute</td><td>Engineering</td><td>2025</td><td class="mono">IR-E-U-0716</td><td>—</td>
+                <td><span class="badge neutral"><span class="dot neutral"></span>Queued</span></td>
+                <td>—</td><td>—</td>
+                <td><span class="cite-pending">pending fetch</span></td>
+              </tr>
+              <tr>
+                <td>SSN College of Engineering</td><td>Engineering</td><td>2025</td><td class="mono">IR-E-C-1044</td><td>—</td>
+                <td><span class="badge neutral"><span class="dot neutral"></span>Queued</span></td>
+                <td>—</td><td>—</td>
+                <td><span class="cite-pending">pending fetch</span></td>
+              </tr>
+              <tr>
+                <td>Sri Krishna College of Engg.</td><td>Engineering</td><td>2025</td><td class="mono">IR-E-C-0918</td><td>—</td>
+                <td><span class="badge neutral"><span class="dot neutral"></span>Queued</span></td>
+                <td>—</td><td>—</td>
+                <td><span class="cite-pending">pending fetch</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2 class="section-h">Known-issue checks</h2>
+        <p class="section-sub">These are the specific failure modes this iteration exists to prove are caught, not just the happy path.</p>
+        <div class="panel">
+          <table class="reg">
+            <thead><tr><th>Check</th><th>Pattern</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr>
+                <td>Rotation honoured on every page</td><td class="mono">P1</td>
+                <td><span class="badge ok"><span class="dot ok"></span>Passing — 2 of 2 parsed docs</span></td>
+              </tr>
+              <tr>
+                <td>Sections split, not one undifferentiated grid</td><td class="mono">P5</td>
+                <td><span class="badge accent"><span class="dot accent"></span>In progress — Prompt B</span></td>
+              </tr>
+              <tr>
+                <td>₹37.5L / ₹3.75L discrepancy surfaces automatically</td><td class="mono">P10</td>
+                <td><span class="badge ok"><span class="dot ok"></span>Confirmed on Sandip 2025</span></td>
+              </tr>
+              <tr>
+                <td>Orphan count consistent with documented 39</td><td class="mono">§5.4</td>
+                <td><span class="badge accent"><span class="dot accent"></span>Awaiting Prompt C wiring</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ EXTRACTION BROWSER ============ -->
+    <div class="view" id="view-extraction">
+      <div class="topbar">
+        <div>
+          <h1>Extraction Browser</h1>
+          <div class="desc">Layer 1 — raw values, domain-sorted, before any dictionary matching</div>
+        </div>
+        <div class="docswitch" data-group="ext">
+          <button class="docbtn active" data-doc="iitb">IIT Bombay 2025</button>
+          <button class="docbtn" data-doc="sandip">Sandip 2025</button>
+        </div>
+      </div>
+      <div class="content">
+        <div class="ext-grid">
+          <div class="domlist">
+            <div class="domitem active"><span>Financial</span><span class="ct" data-iitb="13" data-sandip="13">13</span></div>
+            <div class="domitem"><span>Student</span><span class="ct" data-iitb="12" data-sandip="12">12</span></div>
+            <div class="domitem"><span>Academic</span><span class="ct" data-iitb="11" data-sandip="11">11</span></div>
+            <div class="domitem"><span>Faculty</span><span class="ct" data-iitb="11" data-sandip="11">11</span></div>
+            <div class="domitem"><span>Research</span><span class="ct" data-iitb="8" data-sandip="8">8</span></div>
+            <div class="domitem"><span>Sustainability</span><span class="ct" data-iitb="6" data-sandip="6">6</span></div>
+            <div class="domitem"><span>Accreditation</span><span class="ct" data-iitb="0" data-sandip="4">0</span></div>
+            <div class="domitem"><span>Placement</span><span class="ct" data-iitb="3" data-sandip="3">3</span></div>
+            <div class="domitem"><span>Infrastructure</span><span class="ct" data-iitb="3" data-sandip="3">3</span></div>
+            <div class="domitem"><span>Governance</span><span class="ct" data-iitb="1" data-sandip="1">1</span></div>
+            <div class="domitem"><span>Faculty annexure</span><span class="ct" data-iitb="—" data-sandip="190 rows">—</span></div>
+          </div>
+
+          <div>
+            <div class="panel">
+              <div class="panel-head">
+                <h3>Sanctioned (Approved) Intake<span class="rot-badge">✓ rotation handled — 90°</span></h3>
+                <a class="cite-link" data-iitb="p.1 · IR-O-U-0306.pdf ↗" data-sandip="p.1 · Sandip-NIRF-2025-Overall.pdf ↗"
+                   data-href-iitb="https://www.nirfindia.org/nirfpdfcdn/2025/pdf/Overall/IR-O-U-0306.pdf#page=1"
+                   data-href-sandip="https://sitrc.sandipfoundation.org/wp-content/uploads/2025/02/NIRF-Report-2025_Overall.pdf#page=1"
+                   href="https://www.nirfindia.org/nirfpdfcdn/2025/pdf/Overall/IR-O-U-0306.pdf#page=1" target="_blank" rel="noopener">p.1 · IR-O-U-0306.pdf ↗</a>
+              </div>
+              <div class="panel-body">
+                <table class="extract">
+                  <thead><tr><th>Academic Year</th><th>2023-24</th><th>2022-23</th><th>2021-22</th><th>2020-21</th><th>2019-20</th><th>2018-19</th></tr></thead>
+                  <tbody>
+                    <tr><td>UG [4 Years Program(s)]</td><td>1161</td><td>1059</td><td>1039</td><td>1030</td><td>-</td><td>-</td></tr>
+                    <tr><td>UG [5 Years Program(s)]</td><td>80</td><td>182</td><td>202</td><td>211</td><td>178</td><td>-</td></tr>
+                    <tr><td>PG [2 Year Program(s)]</td><td>1558</td><td>1543</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+                  </tbody>
+                </table>
+
+                <details class="reveal">
+                  <summary>Show naive extraction (pre-rotation-fix) for comparison</summary>
+                  <div class="garbled">1430 78 410
+No. of students   No. of students
+2018-19 selected for Higher   selected for Higher
+83 154 259
+Rs.) Rs.)
+- - -</div>
+                  <p class="hint">Grouped on the wrong axis, two side-by-side tables interleave into this. Nothing errors — it looks like fluent, plausible text. This is the exact defect Prompt A (M1) fixes at the plumbing level.</p>
+                </details>
+              </div>
+            </div>
+
+            <div class="panel" data-sandip-only style="display:none;">
+              <div class="panel-head"><h3>Faculty annexure — summary</h3><a class="cite-link" href="https://sitrc.sandipfoundation.org/wp-content/uploads/2025/02/NIRF-Report-2025_Overall.pdf#page=5" target="_blank" rel="noopener">pp.5–13 · 190 rows, serials 1–190, no gaps ↗</a></div>
+              <div class="panel-body">
+                <table class="reg">
+                  <tbody>
+                    <tr><td>Gender split</td><td>113 male / 77 female (40.5% female)</td></tr>
+                    <tr><td>Designation mix</td><td>161 Assistant / 20 Associate / 9 Professor</td></tr>
+                    <tr><td>Holding PhD</td><td>48 of 190 (25.3%)</td></tr>
+                    <tr><td>Average age</td><td>37.4 years</td></tr>
+                    <tr><td>Average experience</td><td>124.7 months (~10.4 years)</td></tr>
+                    <tr><td>Marked "currently working: No"</td><td>48 (25.3%) — turnover signal</td></tr>
+                  </tbody>
+                </table>
+                <p class="hint">IIT Bombay's portal copy carries one number here (<span class="mono">833</span>) and no annexure. This is the concrete case for <span class="mono">source_id</span> in the row identity — same KPI, two derivations.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ DICTIONARY MAPPING ============ -->
+    <div class="view" id="view-mapping">
+      <div class="topbar">
+        <div>
+          <h1>Dictionary Mapping</h1>
+          <div class="desc">Layer 2 — extracted values matched against the 229-KPI dictionary</div>
+        </div>
+        <div class="docswitch" data-group="map">
+          <button class="docbtn active" data-doc="iitb">IIT Bombay 2025</button>
+          <button class="docbtn" data-doc="sandip">Sandip 2025</button>
+        </div>
+      </div>
+      <div class="content">
+        <div class="stats-row">
+          <div class="stat"><div class="num">13</div><div class="lbl">DIRECT — printed as-is</div></div>
+          <div class="stat"><div class="num">16</div><div class="lbl">DERIVED — computed</div></div>
+          <div class="stat"><div class="num">6</div><div class="lbl">ANNEXURE — Sandip only</div></div>
+          <div class="stat"><div class="num">12</div><div class="lbl">PARTIAL — weaker form</div></div>
+          <div class="stat"><div class="num">182</div><div class="lbl">NONE — unreachable</div></div>
+        </div>
+
+        <div class="panel">
+          <table class="reg">
+            <thead><tr><th>KPI code</th><th>Variable</th><th>Extracted value</th><th>Match type</th><th>Confidence</th><th>Source</th></tr></thead>
+            <tbody>
+              <tr>
+                <td class="mono">FAC01</td><td>Total faculty headcount</td>
+                <td class="mono" data-iitb="833" data-sandip="derived: 190">833</td>
+                <td><span class="badge ok"><span class="dot ok"></span>DIRECT</span>
+                    <span class="badge annexure" data-sandip-tag style="display:none;"><span class="dot annexure"></span>ANNEXURE</span></td>
+                <td>High</td>
+                <td><a class="cite-link" data-iitb="p.4 ↗" data-sandip="pp.5–13 ↗"
+                       data-href-iitb="https://www.nirfindia.org/nirfpdfcdn/2025/pdf/Overall/IR-O-U-0306.pdf#page=4"
+                       data-href-sandip="https://sitrc.sandipfoundation.org/wp-content/uploads/2025/02/NIRF-Report-2025_Overall.pdf#page=5"
+                       href="https://www.nirfindia.org/nirfpdfcdn/2025/pdf/Overall/IR-O-U-0306.pdf#page=4" target="_blank" rel="noopener">p.4 ↗</a></td>
+              </tr>
+              <tr>
+                <td class="mono">PLC01</td><td>Median UG salary, placed graduates</td>
+                <td class="mono" data-iitb="1,960,000" data-sandip="3,750,000 ⚠">1,960,000</td>
+                <td><span class="badge ok"><span class="dot ok"></span>DIRECT</span></td>
+                <td data-iitb="High" data-sandip="Flagged — see Validation">High</td>
+                <td><a class="cite-link" data-iitb="p.1 ↗" data-sandip="p.1 ↗"
+                       data-href-iitb="https://www.nirfindia.org/nirfpdfcdn/2025/pdf/Overall/IR-O-U-0306.pdf#page=1"
+                       data-href-sandip="https://sitrc.sandipfoundation.org/wp-content/uploads/2025/02/NIRF-Report-2025_Overall.pdf#page=1"
+                       href="https://www.nirfindia.org/nirfpdfcdn/2025/pdf/Overall/IR-O-U-0306.pdf#page=1" target="_blank" rel="noopener">p.1 ↗</a></td>
+              </tr>
+              <tr>
+                <td class="mono">A25</td><td>Dropout rate</td>
+                <td class="mono">1 − (on-time grads / admitted)</td>
+                <td><span class="badge derived"><span class="dot derived"></span>DERIVED</span></td>
+                <td>Low — approximation, see §5.3</td>
+                <td><span class="cite-local">computed — not a single cell</span></td>
+              </tr>
+              <tr>
+                <td class="mono">ESG07</td><td>Waste recycling rate</td>
+                <td class="mono" data-iitb="&quot;Comprehensive infrastructure&quot;" data-sandip="&quot;No recycling infrastructure&quot;">"Comprehensive infrastructure"</td>
+                <td><span class="badge accent"><span class="dot accent"></span>PARTIAL</span></td>
+                <td>Ordinal, not a rate — client decision needed</td>
+                <td><a class="cite-link" data-iitb="p.3 ↗" data-sandip="p.9 ↗"
+                       data-href-iitb="https://www.nirfindia.org/nirfpdfcdn/2025/pdf/Overall/IR-O-U-0306.pdf#page=3"
+                       data-href-sandip="https://sitrc.sandipfoundation.org/wp-content/uploads/2025/02/NIRF-Report-2025_Overall.pdf#page=9"
+                       href="https://www.nirfindia.org/nirfpdfcdn/2025/pdf/Overall/IR-O-U-0306.pdf#page=3" target="_blank" rel="noopener">p.3 ↗</a></td>
+              </tr>
+              <tr>
+                <td class="mono">S11</td><td>Yield rate</td>
+                <td class="mono">admitted / sanctioned intake</td>
+                <td><span class="badge accent"><span class="dot accent"></span>PARTIAL</span></td>
+                <td>Denominator differs from KPI definition</td>
+                <td><span class="cite-local">computed — not a single cell</span></td>
+              </tr>
+              <tr>
+                <td class="mono">X03</td><td>QS World Ranking</td>
+                <td class="mono">—</td>
+                <td><span class="badge neutral"><span class="dot neutral"></span>NONE</span></td>
+                <td>Not a NIRF field</td>
+                <td><span class="cite-pending">no source — field doesn't exist in form</span></td>
+              </tr>
+              <tr>
+                <td class="mono">A18</td><td>Student-faculty ratio</td>
+                <td class="mono">—</td>
+                <td><span class="badge neutral"><span class="dot neutral"></span>NONE</span></td>
+                <td>Has a real formula — inverted direction in dictionary, see kpi_dictionary_v2</td>
+                <td><span class="cite-local">kpi_dictionary_v2.xlsx · CHANGELOG_v2</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="hint">Direction (Higher/Lower) shown here is read from <span class="mono">kpi_dictionary_v2.xlsx</span>, not the original — 8 KPIs including all three rank codes were inverted with no direction recorded anywhere in the source file.</p>
+      </div>
+    </div>
+
+    <!-- ============ ORPHAN CONCEPTS ============ -->
+    <div class="view" id="view-orphans">
+      <div class="topbar">
+        <div>
+          <h1>Orphan Concepts</h1>
+          <div class="desc">Layer 3 — NIRF fields with no home in the 229-KPI dictionary. This is the argument that the dictionary is incomplete, not that extraction failed.</div>
+        </div>
+      </div>
+      <div class="content">
+        <div class="stats-row">
+          <div class="stat"><div class="num">72</div><div class="lbl">NIRF concepts found in the forms</div></div>
+          <div class="stat"><div class="num">33</div><div class="lbl">have a KPI home</div></div>
+          <div class="stat"><div class="num">39</div><div class="lbl">orphaned — no KPI code at all</div></div>
+        </div>
+
+        <div class="panel">
+          <div class="orphan-group">
+            <div class="orphan-group-head"><h4>Capital expenditure, by head</h4><span class="ct">5 orphaned · <a class="cite-link" href="https://www.nirfindia.org/nirfpdfcdn/2025/pdf/Overall/IR-O-U-0306.pdf#page=2" target="_blank" rel="noopener">seen p.2 ↗</a></span></div>
+            <div class="orphan-list">
+              <div class="orphan-row"><span class="field">Capex — Library</span><span class="why">No capex-by-category KPI exists</span></div>
+              <div class="orphan-row"><span class="field">Capex — Laboratory equipment</span><span class="why">Same</span></div>
+              <div class="orphan-row"><span class="field">Capex — Workshops</span><span class="why">Same</span></div>
+              <div class="orphan-row"><span class="field">Capex — Studios</span><span class="why">Same</span></div>
+              <div class="orphan-row"><span class="field">Capex — Other assets</span><span class="why">Same</span></div>
+            </div>
+          </div>
+          <div class="orphan-group">
+            <div class="orphan-group-head"><h4>Operational expenditure, by head</h4><span class="ct">3 orphaned · <a class="cite-link" href="https://www.nirfindia.org/nirfpdfcdn/2025/pdf/Overall/IR-O-U-0306.pdf#page=2" target="_blank" rel="noopener">seen p.2 ↗</a></span></div>
+            <div class="orphan-list">
+              <div class="orphan-row"><span class="field">Opex — Salaries</span><span class="why">FIN domain has an aggregate KPI, not a breakdown</span></div>
+              <div class="orphan-row"><span class="field">Opex — Maintenance</span><span class="why">Same</span></div>
+              <div class="orphan-row"><span class="field">Opex — Other</span><span class="why">Same</span></div>
+            </div>
+          </div>
+          <div class="orphan-group">
+            <div class="orphan-group-head"><h4>Consultancy</h4><span class="ct">3 orphaned · <a class="cite-link" href="https://sitrc.sandipfoundation.org/wp-content/uploads/2025/02/NIRF-Report-2025_Overall.pdf#page=3" target="_blank" rel="noopener">seen p.3 ↗</a></span></div>
+            <div class="orphan-list">
+              <div class="orphan-row"><span class="field">Consultancy — projects</span><span class="why">No consultancy KPI in RES domain</span></div>
+              <div class="orphan-row"><span class="field">Consultancy — clients</span><span class="why">Same</span></div>
+              <div class="orphan-row"><span class="field">Consultancy — amount</span><span class="why">Same</span></div>
+            </div>
+          </div>
+          <div class="orphan-group">
+            <div class="orphan-group-head"><h4>Fee reimbursement, by funding source</h4><span class="ct">4 orphaned · <a class="cite-link" href="https://www.nirfindia.org/nirfpdfcdn/2025/pdf/Overall/IR-O-U-0306.pdf#page=1" target="_blank" rel="noopener">seen p.1 ↗</a></span></div>
+            <div class="orphan-list">
+              <div class="orphan-row"><span class="field">Reimbursement — State govt</span><span class="why">Dictionary has no funding-source split</span></div>
+              <div class="orphan-row"><span class="field">Reimbursement — Central govt</span><span class="why">Same</span></div>
+              <div class="orphan-row"><span class="field">Reimbursement — Institution</span><span class="why">Same</span></div>
+              <div class="orphan-row"><span class="field">Reimbursement — Private bodies</span><span class="why">Same</span></div>
+            </div>
+          </div>
+          <div class="orphan-group">
+            <div class="orphan-group-head"><h4>Other</h4><span class="ct">24 orphaned · <span class="cite-local">mixed sources — see kpi-to-nirf-mapping.csv</span></span></div>
+            <div class="orphan-list">
+              <div class="orphan-row"><span class="field">EDP / MDP earnings</span><span class="why">No executive-development KPI exists</span></div>
+              <div class="orphan-row"><span class="field">Lateral-entry admissions</span><span class="why">STU domain has no admission-pathway split</span></div>
+              <div class="orphan-row"><span class="field">Indian Knowledge System questions</span><span class="why">Not represented in any domain</span></div>
+              <div class="orphan-row"><span class="field">… 21 more</span><span class="why">Full list in kpi-to-nirf-mapping.csv</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ VALIDATION ============ -->
+    <div class="view" id="view-validation">
+      <div class="topbar">
+        <div>
+          <h1>Validation &amp; Checksum</h1>
+          <div class="desc">Layer 4 — digits-vs-words cross-check on every monetary field. Three outcomes, never two.</div>
+        </div>
+      </div>
+      <div class="content">
+        <div class="stats-row">
+          <div class="stat"><div class="num">418</div><div class="lbl">digits/words pairs found</div></div>
+          <div class="stat"><div class="num">400</div><div class="lbl">comparable</div></div>
+          <div class="stat"><div class="num">389</div><div class="lbl">CONFIRMED — agree</div></div>
+          <div class="stat"><div class="num">11</div><div class="lbl">CONFLICTING — disagree</div></div>
+          <div class="stat"><div class="num">18</div><div class="lbl">UNVERIFIED — abstained</div></div>
+        </div>
+
+        <div class="panel">
+          <table class="reg">
+            <thead><tr><th>Document</th><th>Field</th><th>Digits</th><th>Words</th><th>Status</th><th>Source</th></tr></thead>
+            <tbody>
+              <tr class="flag-row">
+                <td>Sandip 2025 Overall, p.1</td><td>Median UG salary, 2021-22</td>
+                <td class="mono">3,750,000</td><td>Three Lakh Seventy Five Thousand</td>
+                <td><span class="badge bad"><span class="dot bad"></span>CONFLICTING — 10×</span></td>
+                <td><a class="cite-link" href="https://sitrc.sandipfoundation.org/wp-content/uploads/2025/02/NIRF-Report-2025_Overall.pdf#page=1" target="_blank" rel="noopener">PDF, p.1 ↗</a></td>
+              </tr>
+              <tr>
+                <td colspan="6" style="padding:0 14px 14px;">
+                  <div class="corrob">
+                    Neighbouring years in the same column: <span class="mono">520,000</span> (2022-23) and <span class="mono">550,000</span> (2023-24) — both agree digits↔words. ₹3.75L is consistent with that series; ₹37.5L is not. Same error repeats in the 2024 submission. <strong>Reasoning shown for the reviewer only — the record itself stores both values and resolves neither.</strong>
+                  </div>
+                </td>
+              </tr>
+              <tr class="flag-row">
+                <td>Sandip 2025 Engineering, p.1</td><td>Capital expenditure, other assets</td>
+                <td class="mono">173,860,605</td><td>Seventy Crore Thirty Eight Lakh Sixty Thousand Six Hundred Five</td>
+                <td><span class="badge bad"><span class="dot bad"></span>CONFLICTING — ₹53cr gap</span></td>
+                <td><span class="cite-pending">via WordPress media API — URL not yet indexed</span></td>
+              </tr>
+              <tr class="flag-row">
+                <td>Sandip 2024 Overall, p.3</td><td>Unidentified financial field</td>
+                <td class="mono">999</td><td>Zero</td>
+                <td><span class="badge bad"><span class="dot bad"></span>CONFLICTING</span></td>
+                <td><span class="cite-pending">via WordPress media API — URL not yet indexed</span></td>
+              </tr>
+              <tr>
+                <td>IIT Bombay 2025 Overall, p.2</td><td>Capital expenditure, library</td>
+                <td class="mono">1,880,000</td><td>Eighteen Lakhs Eighty Thousand</td>
+                <td><span class="badge ok"><span class="dot ok"></span>CONFIRMED</span></td>
+                <td><a class="cite-link" href="https://www.nirfindia.org/nirfpdfcdn/2025/pdf/Overall/IR-O-U-0306.pdf#page=2" target="_blank" rel="noopener">PDF, p.2 ↗</a></td>
+              </tr>
+              <tr>
+                <td>Sandip 2025 Overall, p.4</td><td>Sponsored research, amount received</td>
+                <td class="mono">2,038,900</td><td>Twenty Lakh Thirty Eighty Thousand Nine Hundred</td>
+                <td><span class="badge neutral"><span class="dot neutral"></span>UNVERIFIED — typo in words</span></td>
+                <td><a class="cite-link" href="https://sitrc.sandipfoundation.org/wp-content/uploads/2025/02/NIRF-Report-2025_Overall.pdf#page=4" target="_blank" rel="noopener">PDF, p.4 ↗</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2 class="section-h">Disagreement rate, by institution</h2>
+        <div class="panel">
+          <table class="reg">
+            <thead><tr><th>Institution</th><th>Comparable pairs</th><th>Disagreements</th><th>Rate</th></tr></thead>
+            <tbody>
+              <tr><td>IIT Bombay</td><td>29</td><td>0</td><td><span class="badge ok">0%</span></td></tr>
+              <tr><td>5 other ranked institutions</td><td>156</td><td>0</td><td><span class="badge ok">0%</span></td></tr>
+              <tr><td>4 other ranked institutions</td><td>118</td><td>5</td><td><span class="badge accent">1.65% avg</span></td></tr>
+              <tr><td>Sandip (4 documents)</td><td>97</td><td>6</td><td><span class="badge bad">6.19%</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ PRESIDENT BRIEF ============ -->
+    <div class="view" id="view-brief">
+      <div class="topbar">
+        <div>
+          <h1>President Brief</h1>
+          <div class="desc">Standalone screen for the iteration 1 meeting — not a tool view</div>
+        </div>
+      </div>
+      <div class="content">
+        <div class="brief">
+          <div class="brief-eyebrow">One cell, Sandip's own 2025 submission, UG placement table</div>
+          <div class="hero-num">
+            <span class="hero-figure">₹37.5L</span>
+            <span class="hero-x">vs</span>
+            <span class="hero-figure small">₹3.75L</span>
+          </div>
+          <div class="hero-tenx">10× apart — same cell, digits vs. words</div>
+          <p class="hero-caption">A system that reads only the digits reports Sandip's median graduate salary beating IIT Bombay's by nearly two to one. The form requires the amount in words too, and the words agree with every neighbouring year. Nothing in a naive pipeline would ever flag this — the number is perfectly well-formed, just wrong.</p>
+          <div class="brief-source">Sandip SITRC — NIRF 2025 Overall submission, <a class="cite-link" href="https://sitrc.sandipfoundation.org/wp-content/uploads/2025/02/NIRF-Report-2025_Overall.pdf#page=1" target="_blank" rel="noopener">p.1 ↗</a> · verified against raw text runs, repeats in 2024 submission</div>
+
+          <div class="brief-support">
+            <div class="support-cell">
+              <div class="n">72 vs 56</div>
+              <div class="t">Distinct metric concepts — Sandip's own published submission carries more than IIT Bombay's public NIRF copy. The institution isn't publishing less; nobody has put the two side by side before.</div>
+            </div>
+            <div class="support-cell">
+              <div class="n">39 of 72</div>
+              <div class="t">NIRF concepts with no home in the 229-KPI dictionary — capex breakdowns, consultancy, lateral entry. The dictionary is the thing that's incomplete, not the extraction.</div>
+            </div>
+            <div class="support-cell">
+              <div class="n">Opposite answers</div>
+              <div class="t">Campus recycling infrastructure: IIT Bombay reports "comprehensive," Sandip reports "none." Self-declared, directly comparable, and neither institution can game it.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // nav switching
+  document.querySelectorAll('.navitem').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.navitem').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+      document.getElementById('view-'+btn.dataset.view).classList.add('active');
+    });
+  });
+
+  // domain list selection (extraction browser) — visual only
+  document.querySelectorAll('.domitem').forEach(d=>{
+    d.addEventListener('click', ()=>{
+      document.querySelectorAll('.domitem').forEach(x=>x.classList.remove('active'));
+      d.classList.add('active');
+    });
+  });
+
+  // doc switchers: swap data-iitb / data-sandip attributes into visible text,
+  // and toggle [data-sandip-only] panels
+  function applyDoc(scopeSelector, doc){
+    document.querySelectorAll(scopeSelector).forEach(root=>{
+      root.querySelectorAll('[data-iitb]').forEach(el=>{
+        const v = doc === 'sandip' ? el.getAttribute('data-sandip') : el.getAttribute('data-iitb');
+        if (v !== null) el.textContent = v;
+      });
+      root.querySelectorAll('[data-sandip-only]').forEach(el=>{
+        el.style.display = doc === 'sandip' ? '' : 'none';
+      });
+      root.querySelectorAll('[data-sandip-tag]').forEach(el=>{
+        el.style.display = doc === 'sandip' ? '' : 'none';
+      });
+      root.querySelectorAll('[data-href-iitb]').forEach(el=>{
+        const h = doc === 'sandip' ? el.getAttribute('data-href-sandip') : el.getAttribute('data-href-iitb');
+        if (h) el.setAttribute('href', h);
+      });
+    });
+  }
+
+  document.querySelectorAll('.docswitch').forEach(group=>{
+    const buttons = group.querySelectorAll('.docbtn');
+    const scope = group.closest('.topbar').nextElementSibling; // .content sibling
+    buttons.forEach(b=>{
+      b.addEventListener('click', ()=>{
+        buttons.forEach(x=>x.classList.remove('active'));
+        b.classList.add('active');
+        applyDoc('#'+scope.parentElement.id+' .content, #'+scope.id, b.dataset.doc);
+        // simpler: apply within the whole view container
+        const view = group.closest('.view');
+        applyDoc('#'+view.id, b.dataset.doc);
+      });
+    });
+  });
+</script>
+</body>
+</html>
