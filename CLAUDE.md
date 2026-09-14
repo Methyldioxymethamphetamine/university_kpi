@@ -77,9 +77,12 @@ be verified against a known value end to end. Verified, not assumed.
 
 **Licensing and libraries**
 
-- **P-1** Never install or import PyMuPDF, `fitz`, or any AGPL-licensed package.
-  This is client work. If you believe an AGPL package is required, **stop and say
-  so**. Do not install it and ask later.
+- **P-1 — retired.** This was a client-work licensing constraint (no AGPL
+  packages, specifically PyMuPDF/fitz). This is a college project, not a
+  client deliverable, so it does not apply. PyMuPDF/fitz may be used freely if
+  it's ever a better fit than pypdfium2. The number is left retired rather than
+  reused, so P-2 through P-16 below keep their existing references in
+  PROMPTS.md and INSTRUCTIONS.md unchanged.
 - **P-2** Never write Docling output to Markdown or HTML. Those exports are lossy
   — they drop pages and bounding boxes. `save_as_json()` only. If you find
   yourself calling `.export_to_markdown()`, you are wrong.

@@ -91,8 +91,8 @@ uv pip install -e ".[dev]"
 # 7. pre-warm Docling models (downloads layout + TableFormer weights)
 python -c "from docling.document_converter import DocumentConverter; DocumentConverter()"
 
-# 8. LICENCE SCAN — must return nothing. If PyMuPDF appears, stop and escalate.
-pip-licenses --format=markdown | grep -i -E "AGPL|GPL"
+# 8. (was a licence scan for client work — not required for a college project.
+#    Optional if you want it anyway: pip-licenses --format=markdown | grep -i GPL)
 
 # 9. database
 docker compose up -d
@@ -106,7 +106,6 @@ git add -A && git commit -m "scaffold"
 
 - [ ] `CLAUDE.md` at repo root
 - [ ] All six documents resolve at the exact paths listed
-- [ ] `pip-licenses | grep AGPL` returns nothing
 - [ ] Docling import succeeds and models are cached
 - [ ] `docker compose ps` shows the db healthy
 - [ ] Clean `git status`
@@ -169,7 +168,8 @@ means a migration.
 - Do not skip the self-verification output. Every phase prints distributions
   before exiting; if that output is missing from the gate file, reject it.
 - Do not install anything not in `pyproject.toml` without the integrator's
-  sign-off. P-1 is a licensing constraint on client work, not a preference.
+  sign-off. Untracked dependencies make the repo unreproducible for the rest
+  of the team.
 
 ---
 
@@ -248,7 +248,6 @@ Stop, record the result, escalate to the integrator, start a fresh session.
 
 | Trigger | Why |
 |---|---|
-| An AGPL package appears, direct or transitive | Licensing exposure on client work (P-1) |
 | P2E T3 returns any value from a random homepage | The rotation failure in a new costume (P-15) |
 | A gate file claims a write succeeded without read-back | The exact defect that nearly shipped a false changelog (P-10) |
 | A mapping is auto-accepted at any confidence | P-13; a threshold of 0.34 vs 0.30 changed match counts 116 → 164 |
@@ -301,10 +300,12 @@ These are unresolved by design. Do not let anyone quietly close them by guessing
 | **Fingerprint** | The test that decides which profile applies to a document |
 | **Discovery mode** | What runs when no profile matches: propose candidates for human review |
 | **Gate file** | `gate/PX-*.md` — the signed record that a phase completed |
-| **P-1 … P-16** | Prohibitions in `CLAUDE.md` |
+| **P-1** | Retired. Was an AGPL/client-licensing rule, not applicable to a college project. |
+| **P-2 … P-16** | Active prohibitions in `CLAUDE.md` |
 | **P1 … P22** | Pattern catalogue in `notes/methodology.md` §9. **Different numbering — do not confuse the two.** |
 | **CONFIRMED / CONFLICTING / UNVERIFIED** | The three checksum states. Never two. |
 | **MATCH / PARTIAL / NONE** | Fingerprint outcomes |
 
-> Note the collision: `P-1` (a prohibition, no AGPL) is not `P1` (a pattern, page
-> rotation). The hyphen is load-bearing. When in doubt, write the full name.
+> Note the collision: `P-7` (a prohibition, the digits/words checksum) is not
+> `P7` (a pattern, published-vs-institution copy). The hyphen is load-bearing.
+> When in doubt, write the full name.

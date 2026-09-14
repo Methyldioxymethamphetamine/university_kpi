@@ -17,19 +17,13 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
   "pytest>=8",
-  "pip-licenses>=5",
 ]
 
-# LICENSING — see CLAUDE.md P-1.
-# PyMuPDF / fitz is AGPL-3.0 and must never appear in this tree, directly or
-# transitively. pypdfium2 (Apache-2.0/BSD) covers the same coordinate-level
-# needs. Run after every dependency change:
-#     pip-licenses --format=markdown | grep -i -E "AGPL|GPL"
-# Expected to return only: psycopg / psycopg-binary (LGPL-3.0-only).
-# Reviewed 2026-09-14: this is a non-distributed, non-monetized college
-# project, and psycopg is used unmodified via its public API — LGPL's
-# distribution/relink obligations don't engage. Accepted. Any *AGPL* hit is
-# still a hard stop per P-1.
+# NOTE: pypdfium2 (Apache-2.0/BSD) is used for coordinate-level checks instead
+# of PyMuPDF/fitz. This was originally a client-licensing choice (PyMuPDF is
+# AGPL-3.0); that constraint doesn't apply to a college project, so PyMuPDF is
+# fine to use too if it's ever a better fit. pypdfium2 is kept as the default
+# only because P1 (see CLAUDE.md) was already verified against it.
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

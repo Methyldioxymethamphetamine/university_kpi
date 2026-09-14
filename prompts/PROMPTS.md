@@ -661,10 +661,8 @@ Your prior is that this code produces confidently wrong output. Find where.
   6. Immutability. Any path that can overwrite raw/, mutate a value row, or
      collide two artifacts onto one hash.
 
-  7. Licences (P-1). Confirm nothing AGPL entered the tree — direct or
-     transitive. Run the actual dependency scan; do not rely on reading imports.
-     Any AGPL package present is CRITICAL and non-negotiable: this is client
-     work.
+  7. (Retired — was a licence check for client work; not applicable here. See
+     CLAUDE.md P-1.)
 
   8. Threshold and constant provenance. Every fitted constant (the ~200-char
      classifier threshold, the column-clustering gap, the vertical-break
