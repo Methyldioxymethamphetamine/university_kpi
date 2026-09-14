@@ -1,0 +1,34 @@
+concept_name,kpi_code,mapping_status,domain,notes
+Median salary of placed graduates,P02,DIRECT,PLC,Median annual compensation of placed graduates
+No. of students placed,P01,DERIVED,PLC,Placement rate numerator (placed / graduating)
+No. of students selected for Higher Studies,P05,DERIVED,PLC,Higher studies rate numerator (higher studies / graduating)
+Total Students,S01,DIRECT,STU,Total student enrollment headcount
+No. of UG Students,S02,DIRECT,STU,Undergraduate enrolled student headcount
+No. of PG Students,S03,DIRECT,STU,Postgraduate enrolled student headcount
+No. of Female Students,S07,DERIVED,STU,Women students enrollment share (female / total)
+Outside State,S06,DIRECT,STU,Students enrolled from other Indian states
+Outside Country,S05,DIRECT,STU,International students enrolled (also INT01)
+Economically Backward,S08,DERIVED,STU,Economically disadvantaged students count/share
+Socially Challenged,S08,DERIVED,STU,Socially disadvantaged students count/share (SC+ST+OBC)
+No. of first year students intake in the year,S10,PARTIAL,STU,Sanctioned first year intake (acceptance rate denominator)
+No. of first year students admitted in the year,S11,PARTIAL,STU,First year enrolled/admitted students count
+No. of students graduating in minimum stipulated time,A24,DERIVED,ACA,Graduation rate numerator (on-time graduation / admitted)
+Full Time PhD scholars,S04,DIRECT,STU,Enrolled full-time doctoral scholars (also R24)
+No. of Ph.D students graduated (including Integrated Ph.D),R25,DIRECT,RES,Doctorates awarded in reporting year
+Total full-time faculty,F01,DIRECT,FAC,Total academic faculty headcount
+Faculty Gender,F01,ANNEXURE,FAC,Faculty gender distribution from annexure (also ESG13)
+Faculty Designation,F02,ANNEXURE,FAC,Permanent/cadre faculty share from annexure
+Faculty Qualification,F03,ANNEXURE,FAC,Faculty holding PhD/doctorate from annexure
+Faculty Experience,F04,ANNEXURE,FAC,Average teaching/industry experience from annexure
+Faculty Currently Working,F14,ANNEXURE,FAC,Faculty retention/turnover signal from annexure
+Faculty Age,F01,ANNEXURE,FAC,Faculty age distribution from annexure
+No. of Patents Published,R15,DIRECT,RES,Patent applications published in reporting year
+No. of Patents Granted,R16,DIRECT,RES,Patents granted in reporting year
+Sponsored Research Total Amount,R11,DIRECT,RES,External research grant income (Amount in Rupees)
+Total no. of Sponsored Projects,R14,DIRECT,RES,Active sponsored research projects count
+Annual Capital Expenditure,FIN08,DERIVED,FIN,Total annual capital expenditure (capex/student)
+Annual Operational Expenditure,FIN06,DERIVED,FIN,Total annual operational expenditure (cost/student)
+PCS Facilities,I16,PARTIAL,INF,Accessible buildings provisions (lifts/ramps/toilets)
+Grievance Redressal Cell,G15,PARTIAL,GOV,Established grievance redressal cell
+Multiple Entry/Exit,A33,PARTIAL,ACA,Programmes implementing multiple entry/exit policy
+Waste Management,ESG07,PARTIAL,ESG,Campus waste management and recycling initiatives

@@ -10,7 +10,7 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 
-from classify.artifact import DOCS_ROOT, find_raw_path, manifest_path
+from classify.artifact import DOCS_ROOT, find_raw_path, get_page_rotations, manifest_path
 from classify.labels import HTML_TABLE, PDF_DIGITAL, PDF_MIXED, PDF_SCAN
 from convert.assets import extract_assets
 from convert.docling_wrapper import convert_to_docling_document, save_document_json
@@ -43,7 +43,8 @@ def convert_artifact(sha256: str) -> dict:
 
     doc_dir = DOCS_ROOT / sha256[:8]
     out_json = doc_dir / "docling.json"
-    save_document_json(document, out_json)  # P-2: save_as_json() only
+    page_rotations = get_page_rotations(sha256)
+    save_document_json(document, out_json, page_rotations=page_rotations)  # P-2: save_as_json() only
 
     written_assets = extract_assets(document, doc_dir / "assets")
 
@@ -54,6 +55,7 @@ def convert_artifact(sha256: str) -> dict:
         "n_tables": len(document.tables),
         "n_pictures": len(document.pictures),
         "assets_extracted": len(written_assets),
+        "page_rotations": {str(k): v for k, v in page_rotations.items()},
         "converted_at": datetime.now(timezone.utc).isoformat(),
     }
 

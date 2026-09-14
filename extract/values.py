@@ -49,6 +49,9 @@ class ValueRow:
     dash_state: str
     normalized_value: float | None
     has_word_form: bool
+    section: str | None = None
+    sub_block: str | None = None
+    anomaly_reason: str | None = None
 
     def __post_init__(self) -> None:
         # Citation-required-at-write-time: a value without sha256 + item_id
@@ -91,6 +94,10 @@ def build_value_row(cell: TableCell) -> ValueRow | None:
         # column = label), not a text match.
         return None
 
+    # Empty spacer cells in sub-header rows have no row label and no value
+    if cell.text.strip() == "" and (cell.row_label is None or cell.row_label.strip() == ""):
+        return None
+
     dash_state, normalized_value = _classify(cell.text)
     has_word_form = bool(_HAS_WORD_FORM_RE.search(cell.text))
 
@@ -110,6 +117,9 @@ def build_value_row(cell: TableCell) -> ValueRow | None:
         dash_state=dash_state,
         normalized_value=normalized_value,
         has_word_form=has_word_form,
+        section=cell.section,
+        sub_block=cell.sub_block,
+        anomaly_reason=cell.anomaly_reason,
     )
 
 

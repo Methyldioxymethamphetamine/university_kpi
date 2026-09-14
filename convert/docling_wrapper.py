@@ -16,6 +16,7 @@ artifact exists to verify against.
 """
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from docling.datamodel.base_models import InputFormat
@@ -49,9 +50,36 @@ def convert_to_docling_document(raw_path: Path) -> DoclingDocument:
     return result.document
 
 
-def save_document_json(document: DoclingDocument, out_path: Path) -> None:
+def enrich_docling_json_with_rotation(
+    out_path: Path, page_rotations: dict[int, int | None]
+) -> None:
+    """Enrich docling.json's pages with page_rotation (and rotation) metadata,
+    matching how size is stored in docling.json's pages dict.
+    """
+    if not out_path.exists():
+        return
+    with open(out_path, "r", encoding="utf-8") as f:
+        doc = json.load(f)
+    pages = doc.get("pages", {})
+    for p_no, rot in page_rotations.items():
+        key = str(p_no)
+        if key in pages:
+            pages[key]["page_rotation"] = rot
+            pages[key]["rotation"] = rot
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(doc, f, indent=2)
+
+
+def save_document_json(
+    document: DoclingDocument,
+    out_path: Path,
+    page_rotations: dict[int, int | None] | None = None,
+) -> None:
     """P-2: save_as_json() only. If you are tempted to add
     export_to_markdown()/export_to_html() here, don't -- tests/test_p2_no_lossy_export.py
     fails the build if either call appears anywhere under convert/."""
     out_path.parent.mkdir(parents=True, exist_ok=True)
     document.save_as_json(out_path)
+    if page_rotations:
+        enrich_docling_json_with_rotation(out_path, page_rotations)
+

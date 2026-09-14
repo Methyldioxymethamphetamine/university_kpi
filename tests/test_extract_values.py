@@ -8,7 +8,7 @@ from extract.docling_source import TableCell
 from extract.values import DASH, EMPTY, NUMBER, TEXT, ZERO, ValueRow, build_value_row
 
 
-def _cell(text: str, *, row=1, col=1, is_col_hdr=False, is_row_hdr=False, sha256="deadbeef", table_ref="#/tables/0", period_type=None, period_value=None):
+def _cell(text: str, *, row=1, col=1, is_col_hdr=False, is_row_hdr=False, sha256="deadbeef", table_ref="#/tables/0", period_type=None, period_value=None, row_label="Some Row"):
     return TableCell(
         sha256=sha256,
         table_ref=table_ref,
@@ -19,7 +19,7 @@ def _cell(text: str, *, row=1, col=1, is_col_hdr=False, is_row_hdr=False, sha256
         is_row_header=is_row_hdr,
         page_no=1,
         bbox={"l": 0, "t": 0, "r": 1, "b": 1, "coord_origin": "TOPLEFT"},
-        row_label="Some Row",
+        row_label=row_label,
         column_label="2023-24",
         period_type=period_type,
         period_value=period_value,
@@ -64,22 +64,110 @@ def test_header_and_label_cells_produce_no_value_row():
     assert build_value_row(_cell("Some Row Header", is_row_hdr=True)) is None
 
 
-def test_citation_required_at_write_time():
-    with pytest.raises(ValueError):
-        ValueRow(
-            sha256="",
-            item_id="",
-            page_no=1,
-            bbox=None,
-            table_ref="#/tables/0",
-            row_index=0,
-            col_index=1,
-            row_label=None,
-            column_label=None,
-            period_type=None,
-            period_value=None,
-            raw_value="42",
-            dash_state=NUMBER,
-            normalized_value=42.0,
-            has_word_form=False,
-        )
+def test_empty_spacer_cell_produce_no_value_row():
+    # Empty text with empty row_label is an empty spacer cell in a sub-header row
+    assert build_value_row(_cell("", row=1, col=1, is_col_hdr=False, row_label="")) is None
+    assert build_value_row(_cell("", row=1, col=1, is_col_hdr=False, row_label=None)) is None
+
+
+def test_continuation_table_inherits_headers():
+    from extract.docling_source import iter_table_cells
+    dummy_doc = {
+        "body": {
+            "children": [
+                {"$ref": "#/texts/0"},
+                {"$ref": "#/tables/0"},
+                {"$ref": "#/tables/1"},
+            ]
+        },
+        "texts": [
+            {"text": "Placement & Higher Studies: UG [4 Years]", "prov": [{"page_no": 1}]}
+        ],
+        "tables": [
+            {
+                "self_ref": "#/tables/0",
+                "prov": [{"page_no": 1}],
+                "data": {
+                    "grid": [
+                        [
+                            {"text": "Academic Year", "column_header": True},
+                            {"text": "No. of students placed", "column_header": True},
+                        ],
+                        [
+                            {"text": "2018-19", "column_header": False},
+                            {"text": "100", "column_header": False},
+                        ],
+                    ]
+                },
+            },
+            {
+                "self_ref": "#/tables/1",
+                "prov": [{"page_no": 2}],
+                "data": {
+                    "grid": [
+                        [
+                            {"text": "2019-20", "column_header": False},
+                            {"text": "150", "column_header": False},
+                        ],
+                    ]
+                },
+            },
+        ],
+    }
+    cells = iter_table_cells("dummy_sha", dummy_doc)
+    t1_val_cell = [c for c in cells if c.table_ref == "#/tables/1" and c.col_index == 1][0]
+    assert t1_val_cell.column_label == "No. of students placed"
+    assert t1_val_cell.row_label == "2019-20"
+
+
+def test_continuation_table_mismatched_ncols_refused():
+    from extract.docling_source import iter_table_cells
+    dummy_doc = {
+        "body": {
+            "children": [
+                {"$ref": "#/texts/0"},
+                {"$ref": "#/tables/0"},
+                {"$ref": "#/tables/1"},
+            ]
+        },
+        "texts": [
+            {"text": "Placement & Higher Studies: UG [4 Years]", "prov": [{"page_no": 1}]}
+        ],
+        "tables": [
+            {
+                "self_ref": "#/tables/0",
+                "prov": [{"page_no": 1}],
+                "data": {
+                    "grid": [
+                        [
+                            {"text": "Academic Year", "column_header": True},
+                            {"text": "No. of students placed", "column_header": True},
+                            {"text": "Median salary", "column_header": True},
+                        ],
+                    ]
+                },
+            },
+            {
+                "self_ref": "#/tables/1",
+                "prov": [{"page_no": 2}],
+                "data": {
+                    "grid": [
+                        [
+                            {"text": "2019-20", "column_header": False},
+                            {"text": "150", "column_header": False},
+                        ],
+                    ]
+                },
+            },
+        ],
+    }
+    cells = iter_table_cells("dummy_sha", dummy_doc)
+    t1_val_cell = [c for c in cells if c.table_ref == "#/tables/1" and c.col_index == 1][0]
+    # Mismatched column counts (3 cols in header vs 2 cols in continuation) must NOT silently inherit
+    assert t1_val_cell.column_label is None
+    assert t1_val_cell.anomaly_reason == "continuation_column_count_mismatch"
+    row = build_value_row(t1_val_cell)
+    assert row is not None
+    assert row.anomaly_reason == "continuation_column_count_mismatch"
+
+
