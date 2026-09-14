@@ -1,0 +1,63 @@
+# Source registry — India.
+#
+# A source is DATA, not code. Adding an institution, a year, a rank band or a
+# pasted URL is an edit to this file and nothing else. If a new source requires
+# a code change in acquire/, the abstraction is wrong (see PROMPTS.md P2A).
+#
+# Two entry types share ONE fetch path:
+#   type: pattern     templated URL + enumerator
+#   type: adhoc_url   a single pasted URL
+#
+# robots_checked_at / terms_reviewed_at are filled by a HUMAN before any full
+# run. Claude Code must leave them null and surface them as [OPEN].
+
+country: IN
+
+verified_retrieval:
+  # Confirmed by fetching during the source investigation. [VERIFIED]
+  nirf_pdf_pattern: "https://www.nirfindia.org/nirfpdfcdn/{year}/pdf/{category}/{institution_id}.pdf"
+  wordpress_media_api: "{origin}/wp-json/wp/v2/media?per_page=100&search={q}&_fields=source_url,title"
+
+sources:
+
+  - source_id: nirf_iitb_overall
+    type: pattern
+    institution_code: IR-O-U-0306
+    institution_name: Indian Institute of Technology Bombay
+    pattern: nirf_pdf_pattern
+    params:
+      category: Overall
+      institution_id: IR-O-U-0306
+    enumerator:
+      years: [2024, 2025]
+    expected_content_type: application/pdf
+    period_type: academic_year
+    robots_checked_at: null      # [OPEN]
+    terms_reviewed_at: null      # [OPEN]
+
+  - source_id: sandip_sitrc_overall
+    type: pattern
+    institution_code: IR-O-C-41520
+    institution_name: Sandip Institute of Technology and Research Centre
+    # Sandip is a NIRF participant but NOT ranked, so nirfindia.org publishes no
+    # PDF. The institution's own WordPress site does. [VERIFIED]
+    pattern: wordpress_media_api
+    params:
+      origin: "https://sitrc.sandipfoundation.org"
+      q: nirf
+    enumerator:
+      filter: "NIRF-Report-{year}_Overall"
+      years: [2024, 2025]
+    expected_content_type: application/pdf
+    period_type: academic_year
+    robots_checked_at: null      # [OPEN]
+    terms_reviewed_at: null      # [OPEN]
+
+  # Example of the second entry type. A pasted link is a registry entry.
+  # - source_id: adhoc_example
+  #   type: adhoc_url
+  #   url: "https://example.edu/disclosure.pdf"
+  #   institution_code: null
+  #   expected_content_type: null
+  #   robots_checked_at: null
+  #   terms_reviewed_at: null

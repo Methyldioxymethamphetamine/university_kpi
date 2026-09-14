@@ -1,0 +1,22 @@
+# Regenerable or large. Never committed.
+raw/*
+!raw/.gitkeep
+docs/*
+!docs/.gitkeep
+!docs/architecture.md
+values/*
+!values/.gitkeep
+derived/*
+!derived/.gitkeep
+
+# Scrapy resume state
+state/
+
+# gate/ IS committed — it is the audit trail.
+
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.env
+*.egg-info/

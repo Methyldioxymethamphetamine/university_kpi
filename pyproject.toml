@@ -1,0 +1,38 @@
+[project]
+name = "kpi-pipeline"
+version = "0.1.0"
+description = "University KPI benchmarking: acquisition, extraction and storage layer"
+requires-python = ">=3.11"
+
+dependencies = [
+  "scrapy>=2.14",
+  "docling>=2.0",
+  "docling-core>=2.83",
+  "pypdfium2>=4",
+  "psycopg[binary]>=3.2",
+  "pyyaml>=6",
+  "pydantic>=2",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8",
+  "pip-licenses>=5",
+]
+
+# LICENSING — see CLAUDE.md P-1.
+# This is client work. PyMuPDF / fitz is AGPL-3.0 and must never appear in this
+# tree, directly or transitively. pypdfium2 (Apache-2.0/BSD) covers the same
+# coordinate-level needs. Run after every dependency change:
+#     pip-licenses --format=markdown | grep -i -E "AGPL|GPL"
+# Expected output: nothing.
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+# No importable package exists yet (iteration 1 has not written code under a
+# package dir). Without this, setuptools' flat-layout auto-discovery sees the
+# scaffold directories (raw/, notes/, findings/, ...) and refuses to guess.
+# Remove/replace once P1+ adds real source under e.g. src/kpi_pipeline/.
+[tool.setuptools]
+packages = []
