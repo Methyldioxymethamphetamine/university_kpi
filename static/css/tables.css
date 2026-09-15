@@ -1,0 +1,208 @@
+/* ==========================================================================
+   Table Component & Pagination Styles
+   ========================================================================== */
+
+.table-container {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  display: block;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: inherit;
+  background-color: var(--panel);
+  box-sizing: border-box;
+}
+
+.data-table {
+  width: 100%;
+  min-width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  background-color: var(--panel);
+  font-size: var(--text-meta);
+}
+
+.data-table caption {
+  text-align: left;
+  padding: 10px 16px;
+  font-size: var(--text-micro);
+  color: var(--ink-soft);
+  caption-side: bottom;
+  border-top: 1px solid var(--rule);
+}
+
+.data-table th {
+  font-size: var(--text-micro);
+  font-weight: 600;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 10px 16px;
+  background-color: var(--panel-alt);
+  border-bottom: 1px solid var(--rule-strong);
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.data-table.sticky-header th {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.data-table td {
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--rule);
+  color: var(--ink);
+  vertical-align: middle;
+  line-height: 1.45;
+}
+
+.data-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.data-table tbody tr:hover {
+  background-color: var(--panel-hover);
+}
+
+/* Row states */
+tr.row-conflicting {
+  background-color: #FDF2F0 !important;
+}
+
+tr.row-conflicting td {
+  border-bottom-color: #E2ADA3;
+}
+
+tr.row-conflicting td:first-child {
+  border-left: 3px solid var(--bad);
+}
+
+/* Alignment & Column Helpers */
+.col-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.col-mono {
+  font-family: var(--mono);
+  font-size: var(--text-micro);
+}
+
+.col-nowrap {
+  white-space: nowrap;
+}
+
+.col-shrink {
+  width: 1%;
+  white-space: nowrap;
+}
+
+/* Identifier & Code Columns (Prevents arbitrary word breaking in IDs/codes) */
+.data-table code {
+  white-space: nowrap;
+  word-break: keep-all;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.col-inst,
+th.col-inst,
+td.col-inst {
+  min-width: 160px;
+  max-width: 320px;
+  white-space: normal;
+  word-break: normal;
+}
+
+.col-run,
+th.col-run,
+td.col-run {
+  white-space: nowrap;
+  min-width: 180px;
+  word-break: keep-all;
+}
+
+.col-kpi,
+th.col-kpi,
+td.col-kpi {
+  white-space: nowrap;
+  min-width: 90px;
+  word-break: keep-all;
+}
+
+.col-code,
+th.col-code,
+td.col-code {
+  white-space: nowrap;
+  min-width: 120px;
+  word-break: keep-all;
+  font-family: var(--mono);
+}
+
+.col-sha,
+th.col-sha,
+td.col-sha {
+  white-space: nowrap;
+  min-width: 95px;
+  word-break: keep-all;
+  font-family: var(--mono);
+}
+
+/* Pagination Bar */
+.pagination-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-top: 1px solid var(--rule);
+  background-color: var(--panel);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.pagination-info {
+  font-size: var(--text-meta);
+  color: var(--ink-soft);
+}
+
+.pagination-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.page-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  height: 34px;
+  padding: 0 8px;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+  background-color: var(--panel);
+  color: var(--ink);
+  font-size: var(--text-meta);
+  text-decoration: none;
+  font-weight: 500;
+  transition: background-color 0.15s ease;
+}
+
+.page-btn:hover:not(.disabled) {
+  background-color: var(--panel-alt);
+}
+
+.page-btn.active {
+  background-color: var(--ink);
+  color: #FFFFFF;
+  border-color: var(--ink);
+}
+
+.page-btn.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}

@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Live Scrape — NIRF Benchmarking{% endblock %}
+
+{% block content %}
+<div class="panel">
+  <div class="panel-head">
+    <h2>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+      </svg>
+      Paste a Link, Scrape Live
+    </h2>
+    <span class="badge neutral">Synchronous Pipeline</span>
+  </div>
+
+  <div class="panel-body">
+    <p class="text-soft">
+      Fetch and process a new NIRF PDF directly from an institution's public URL through the full pipeline:
+      fetch &rarr; robots.txt audit &rarr; classify &rarr; convert (Docling) &rarr; fingerprint.
+    </p>
+
+    <form method="POST" action="/scrape" style="margin-top: 16px;">
+      <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px;">
+        <input type="url" name="url" placeholder="https://example.edu/nirf-report-2025.pdf" class="input-control" style="flex: 1; min-width: 320px;" required>
+        <button type="submit" class="btn btn-primary">Start Live Scrape</button>
+      </div>
+      <div class="text-faint" style="font-size: var(--text-micro);">
+        Note: Large or slow PDFs may take 15–45 seconds to convert. The page will respond once Docling conversion and classification finish.
+      </div>
+    </form>
+  </div>
+</div>
+
+{% if result %}
+<div class="panel">
+  <div class="panel-head">
+    <h2>Scrape Result: <code>{{ result.url }}</code></h2>
+    <span class="badge {{ 'ok' if result.success else 'bad' }}">
+      {{ 'Acquired' if result.success else 'Halted' }}
+    </span>
+  </div>
+
+  <div class="panel-body">
+    {% if result.error %}
+      <div class="banner banner-conflict">
+        <div><strong>Pipeline stopped:</strong> {{ result.error }}</div>
+      </div>
+    {% else %}
+      <div class="stats-row" style="margin-bottom: 20px;">
+        <div class="stat"><div class="num">{{ result.http_status }}</div><div class="lbl">HTTP Status</div></div>
+        <div class="stat"><div class="num">{{ result.content_length }}</div><div class="lbl">Bytes Downloaded</div></div>
+        <div class="stat"><div class="num">{{ result.sha8 }}</div><div class="lbl">Content SHA8</div></div>
+        <div class="stat"><div class="num">{{ result.label }}</div><div class="lbl">Classify Label</div></div>
+      </div>
+
+      <div class="evidence-box">
+<strong>Robots.txt:</strong> {{ result.robots_msg }}
+<strong>File Status:</strong> {{ 'New file written' if result.is_new else 'Already present (content-addressed)' }}
+<strong>Classification:</strong> {{ result.label }}
+<strong>Fingerprint Match:</strong> {{ result.match_status }} {% if result.profile_id %}(Profile: {{ result.profile_id }}){% endif %}
+      </div>
+
+      {% if result.sha8 %}
+      <div style="margin-top: 16px;">
+        <a href="/artifact/{{ result.sha8 }}" class="btn btn-primary">View Extracted Artifact &rarr;</a>
+      </div>
+      {% endif %}
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+{% endblock %}

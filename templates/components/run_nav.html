@@ -1,0 +1,30 @@
+{% if run_id %}
+<div class="panel" style="margin-bottom: 20px; background-color: var(--panel-alt);">
+  <div style="padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+      <span class="text-soft font-mono" style="font-size: var(--text-micro);">RUN:</span>
+      <span class="font-mono font-semibold" style="font-size: var(--text-meta);">{{ run_id }}</span>
+      <span class="text-faint">&bull;</span>
+      <a href="/runs" class="btn btn-sm" title="View all runs">&larr; All Runs</a>
+    </div>
+
+    <nav style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;" aria-label="Run Layers">
+      <a href="/run/{{ run_id }}/extracted" class="btn btn-sm {% if active_layer == 'extracted' %}active{% endif %}">
+        Layer 1: Extracted
+      </a>
+      <a href="/run/{{ run_id }}/domains" class="btn btn-sm {% if active_layer == 'domains' %}active{% endif %}">
+        Layer 2: Domains
+      </a>
+      <a href="/run/{{ run_id }}/mapped" class="btn btn-sm {% if active_layer == 'mapped' %}active{% endif %}">
+        Layer 3: Mapped
+      </a>
+      <a href="/run/{{ run_id }}/orphans" class="btn btn-sm {% if active_layer == 'orphans' %}active{% endif %}">
+        Layer 4: Orphans
+      </a>
+      <a href="/run/{{ run_id }}/validation" class="btn btn-sm {% if active_layer == 'validation' %}active{% endif %}">
+        Validation
+      </a>
+    </nav>
+  </div>
+</div>
+{% endif %}

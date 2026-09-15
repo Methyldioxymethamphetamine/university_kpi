@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Extraction Browser — Layer 1 ({{ run_id }}){% endblock %}
+
+{% block content %}
+<!-- Run Navigation Header -->
+{% include "components/run_nav.html" %}
+
+<!-- Reusable Filter Bar -->
+<form method="GET" action="/run/{{ run_id }}/extracted" class="filter-bar" role="search" aria-label="Extraction filter">
+  <div class="filter-group">
+    {% with select_id="filter-inst", select_name="institution_code", current_inst=inst_filter, all_label="— All Institutions —" %}
+      {% include "components/institution_selector.html" %}
+    {% endwith %}
+
+    <label for="filter-section" class="filter-label">Section:</label>
+    <input type="text" id="filter-section" name="section" value="{{ section_filter }}" placeholder="e.g. Sanctioned, Placement, Capex" class="input-control" style="width: 200px;">
+
+    <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+    {% if inst_filter or section_filter %}
+      <a href="/run/{{ run_id }}/extracted" class="btn btn-sm">Reset</a>
+    {% endif %}
+  </div>
+
+  <div class="filter-group">
+    <input type="search" placeholder="Quick find in page..." class="input-control" style="font-size: var(--text-micro); min-height: 32px;" data-table-search="#table-extracted" aria-label="Search within visible rows">
+    <span class="text-faint font-mono" style="font-size: var(--text-micro);">{{ total_rows }} matching rows</span>
+  </div>
+</form>
+
+<!-- Layer 1 Table Panel -->
+<div class="panel">
+  <div class="panel-head">
+    <h2>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+        <polyline points="14 2 14 8 20 8"></polyline>
+      </svg>
+      Layer 1: Raw Extracted Rows
+      <span class="badge neutral">{{ total_rows }} rows</span>
+    </h2>
+    <span class="text-soft font-mono" style="font-size: var(--text-micro);">Geometric parser output (Profile-agnostic)</span>
+  </div>
+
+  <div class="table-container">
+    <table class="data-table sticky-header" id="table-extracted">
+      <thead>
+        <tr>
+          <th scope="col" class="col-inst">Institution</th>
+          <th scope="col">Section / Grid Cell</th>
+          <th scope="col">Raw Value</th>
+          <th scope="col">Period</th>
+          <th scope="col">Authorization</th>
+          <th scope="col">Mapping Status</th>
+          <th scope="col">Domain</th>
+          <th scope="col">Source Citation</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+          {% set auth_badge = (row.auth_status or 'unverified')|lower %}
+          {% set map_badge = (row.mapping_status or 'unreviewed')|lower %}
+          <tr>
+            <td class="col-inst">
+              <div class="font-semibold" style="color: var(--ink);">{{ institution_names.get(row.institution_code, row.institution_code) }}</div>
+              <div class="col-mono text-soft" style="font-size: var(--text-micro);">{{ row.institution_code }}</div>
+            </td>
+            <td>
+              <div class="font-semibold">{{ row.section or '—' }}</div>
+              {% if row.row_col %}
+                <div class="text-faint font-mono" style="font-size: var(--text-micro);">{{ row.row_col }}</div>
+              {% endif %}
+            </td>
+            <td>
+              <span class="font-mono font-semibold" style="color: var(--ink);">{{ row.raw_value }}</span>
+            </td>
+            <td class="col-nowrap">
+              {% if row.period_value or row.period_type %}
+                <span class="font-mono">{{ row.period_value or '' }}</span>
+                {% if row.period_type %}<span class="text-faint" style="font-size: var(--text-micro);">({{ row.period_type }})</span>{% endif %}
+              {% else %}
+                <span class="text-faint">—</span>
+              {% endif %}
+            </td>
+            <td>
+              <span class="badge {{ auth_badge }}">
+                <span class="dot {{ auth_badge }}"></span>
+                {{ row.auth_status }}
+              </span>
+            </td>
+            <td>
+              <span class="badge {{ map_badge }}">
+                <span class="dot {{ map_badge }}"></span>
+                {{ row.mapping_status }}
+              </span>
+            </td>
+            <td>
+              {% if row.domain %}
+                <code style="color: var(--derived);">{{ row.domain }}</code>
+              {% else %}
+                <span class="text-faint">—</span>
+              {% endif %}
+            </td>
+            <td class="col-nowrap">
+              <div>
+                {% if row.url and row.url.startswith('http') %}
+                  <a href="{{ row.url }}" target="_blank" rel="noopener" class="cite-link" title="{{ row.url }}">
+                    Doc ↗
+                  </a>
+                {% elif row.url and row.url.startswith('fixture://') %}
+                  <span class="text-soft font-mono" style="font-size: var(--text-micro);">{{ row.url }}</span>
+                {% else %}
+                  <span class="text-faint font-mono" style="font-size: var(--text-micro);">local</span>
+                {% endif %}
+                <a href="/artifact/{{ row.sha256[:8] }}" class="cite-link" title="View artifact {{ row.sha256 }}">
+                  [{{ row.sha256[:8] }}]
+                </a>
+                {% if row.page_no is not none %}
+                  <span class="font-mono text-soft" style="font-size: var(--text-micro);">p.{{ row.page_no }}</span>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="8">
+              {% include "components/empty_state.html" %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Reusable Pagination Bar -->
+  {% include "components/pagination.html" %}
+</div>
+{% endblock %}

@@ -1,0 +1,142 @@
+/* ==========================================================================
+   Responsive Architecture: Tablet, Mobile Breakpoints & Reduced Motion
+   ========================================================================== */
+
+/* Tablet & Mobile Breakpoint (<= 900px) */
+@media (max-width: 900px) {
+  .shell {
+    display: block;
+    width: 100%;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 280px;
+    transform: translateX(-100%);
+    box-shadow: var(--shadow-md);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 100;
+  }
+
+  .shell.nav-open .sidebar {
+    transform: translateX(0);
+  }
+
+  .shell.nav-open .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background-color: rgba(27, 35, 31, 0.5);
+    backdrop-filter: blur(2px);
+    z-index: 90;
+    cursor: pointer;
+  }
+
+  .main {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .topbar-mobile-toggle {
+    display: flex;
+  }
+
+  .topbar {
+    padding: 12px 18px;
+    width: 100%;
+  }
+
+  .content {
+    padding: 20px 18px 60px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .panel-head {
+    padding: 12px 16px;
+  }
+
+  .panel-body {
+    padding: 16px;
+  }
+}
+
+/* Small Mobile Breakpoint (<= 640px) */
+@media (max-width: 640px) {
+  .topbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .topbar-left {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .topbar-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .topbar-titles h1 {
+    font-size: 18px;
+  }
+
+  .stats-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .stat {
+    padding: 12px 14px;
+  }
+
+  .stat .num {
+    font-size: 22px;
+  }
+
+  .filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-group {
+    width: 100%;
+  }
+
+  .select-control,
+  .input-control {
+    width: 100%;
+  }
+
+  .brief-figure {
+    font-size: 36px;
+  }
+
+  .brief-figure.secondary {
+    font-size: 28px;
+  }
+
+  .brief-hero-card {
+    padding: 20px;
+  }
+
+  .brief-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Reduced Motion Preference */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

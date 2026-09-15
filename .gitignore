@@ -24,3 +24,9 @@ __pycache__/
 # Graphify
 graphify-out/
 .graphify/
+
+# Agent, assistant & skill tool configurations
+.agents/
+.claude/
+.impeccable/
+skills-lock.json

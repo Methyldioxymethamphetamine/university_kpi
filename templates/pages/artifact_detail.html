@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+
+{% block title %}{{ inst_name }} — Artifact {{ sha8 }}{% endblock %}
+
+{% block content %}
+<!-- Document Selector Banner -->
+<div class="panel" style="margin-bottom: 20px;">
+  <div style="padding: 12px 18px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+    <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+      <label for="doc-jump-select" class="font-semibold text-soft" style="font-size: var(--text-meta);">Jump to Document:</label>
+      <select id="doc-jump-select" class="select-control" style="max-width: 500px;" onchange="if(this.value) window.location.href='/artifact/'+this.value">
+        <option value="">— Select document —</option>
+        {% for g in inst_groups %}
+          <optgroup label="{{ g.name }}">
+            {% for doc in g.docs %}
+              <option value="{{ doc.sha8 }}" {% if doc.sha8 == sha8 %}selected{% endif %}>
+                {{ doc.year }} &bull; {{ doc.category }} ({{ doc.sha8 }})
+              </option>
+            {% endfor %}
+          </optgroup>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 8px;">
+      {% if canon_url and canon_url.startswith('http') %}
+        <a href="{{ canon_url }}" target="_blank" rel="noopener" class="btn btn-sm">Source PDF ↗</a>
+      {% endif %}
+      <a href="?debug={{ '0' if is_debug else '1' }}" class="btn btn-sm {% if is_debug %}active{% endif %}">
+        {{ 'Presentation View' if is_debug else 'Debug View' }}
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Stat Cards -->
+{% include "components/stat_row.html" %}
+
+{% if not is_converted %}
+  <div class="panel">
+    <div class="panel-body">
+      <p class="text-soft" style="margin: 0;">
+        This artifact has not been converted (classification: <code>{{ label }}</code> &mdash; no <code>docling.json</code> exists). Nothing to extract.
+      </p>
+    </div>
+  </div>
+{% elif error_msg %}
+  <div class="banner banner-conflict">
+    <div><strong>Extraction Error:</strong> {{ error_msg }}</div>
+  </div>
+{% else %}
+  <!-- Extracted Document Fields Panel -->
+  <div class="panel">
+    <div class="panel-head">
+      <h2>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+        </svg>
+        Extracted Document Fields
+        <span class="badge ok">{{ value_rows|length }} items</span>
+      </h2>
+      <span class="text-faint font-mono" style="font-size: var(--text-micro);">Layer 1: Geometric parse</span>
+    </div>
+
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th scope="col">Field / Metric Concept</th>
+            <th scope="col">Period</th>
+            <th scope="col">Extracted Value</th>
+            <th scope="col">Page &amp; BBox Evidence</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for v in value_rows %}
+            <tr>
+              <td>
+                <div class="font-semibold">{{ v.row_label or '(unlabeled)' }}</div>
+                {% if v.column_label and v.column_label != v.period_value %}
+                  <div class="text-soft" style="font-size: var(--text-micro);">{{ v.column_label }}</div>
+                {% endif %}
+              </td>
+              <td class="col-nowrap font-mono">
+                {{ v.period_value or v.column_label or '—' }}
+              </td>
+              <td>
+                {% if v.dash_state == 'DASH' %}
+                  <span class="text-faint" style="font-style: italic;">Not reported (dash)</span>
+                {% else %}
+                  <strong class="font-mono" style="font-size: var(--text-large); color: var(--ink);">{{ v.raw_value }}</strong>
+                  {% if v.normalized_value is not none and v.normalized_value != v.raw_value %}
+                    <span class="text-soft font-mono" style="font-size: var(--text-micro);">[norm: {{ v.normalized_value }}]</span>
+                  {% endif %}
+                {% endif %}
+              </td>
+              <td>
+                <details class="disclosure" style="margin: 0; border: none;">
+                  <summary style="font-size: var(--text-micro); color: var(--derived); padding: 4px 8px; min-height: 28px; background: transparent;">
+                    p.{{ v.page_no if v.page_no is not none else '—' }} &bull; bbox
+                  </summary>
+                  <div class="evidence-box" style="margin-top: 4px; padding: 6px 10px; font-size: var(--text-micro);">
+page: {{ v.page_no }}
+bbox: {{ v.bbox_json }}
+                  </div>
+                </details>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Checksums Panel if present -->
+  {% if checksum_rows %}
+    <div class="panel">
+      <div class="panel-head">
+        <h2>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 11l3 3L22 4"></path>
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+          </svg>
+          Validation &amp; Checksums
+          <span class="badge ok">{{ n_confirmed }} of {{ checksum_rows|length }} confirmed</span>
+        </h2>
+        <span class="text-faint font-mono" style="font-size: var(--text-micro);">Digits &amp; Words encoding check</span>
+      </div>
+
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th scope="col">Extracted Phrase</th>
+              <th scope="col" class="col-num">Digits</th>
+              <th scope="col" class="col-num">Words Value</th>
+              <th scope="col">Status</th>
+              <th scope="col">Evidence</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for c in checksum_rows %}
+              {% set badge_cls = (c.state or 'neutral')|lower %}
+              <tr {% if c.state == 'CONFLICTING' %}class="row-conflicting"{% endif %}>
+                <td style="max-width: 320px;">{{ c.raw_value }}</td>
+                <td class="col-num font-mono font-semibold">{{ c.digits_value }}</td>
+                <td class="col-num font-mono font-semibold">
+                  {{ c.words_value if c.words_value is not none else '<span class="text-faint">(abstained)</span>'|safe }}
+                </td>
+                <td>
+                  <span class="badge {{ badge_cls }}">
+                    <span class="dot {{ badge_cls }}"></span>
+                    {{ c.state }}
+                  </span>
+                </td>
+                <td>
+                  <details class="disclosure" style="margin: 0; border: none;">
+                    <summary style="font-size: var(--text-micro); color: var(--derived); padding: 4px 8px; min-height: 28px; background: transparent;">
+                      p.{{ c.page_no if c.page_no is not none else '—' }} &bull; bbox
+                    </summary>
+                    <div class="evidence-box" style="margin-top: 4px; padding: 6px 10px; font-size: var(--text-micro);">
+page: {{ c.page_no }}
+bbox: {{ c.bbox_json }}
+{% if c.abstain_reason %}abstain: {{ c.abstain_reason }}{% endif %}
+                    </div>
+                  </details>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- Provenance Details Disclosure -->
+  <details class="disclosure" style="margin-top: 24px;">
+    <summary>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <polyline points="4 17 10 11 4 5"></polyline>
+        <line x1="12" y1="19" x2="20" y2="19"></line>
+      </svg>
+      Document Provenance &amp; Verification Evidence
+    </summary>
+    <div class="disclosure-body">
+      <div class="evidence-box">
+<strong>SHA256:</strong> {{ sha256 }}
+<strong>Source ID:</strong> {{ manifest.source_id or 'none' }}
+<strong>Institution Code:</strong> {{ manifest.institution_code or 'none' }}
+<strong>Classification Label:</strong> {{ label }}
+<strong>Canonical URL:</strong> {{ manifest.canonical_url or 'none' }}
+<strong>Latest Ingest Run ID:</strong> {{ latest_run_id or 'none' }}
+{% if cross_check_info %}{{ cross_check_info }}{% endif %}
+      </div>
+    </div>
+  </details>
+{% endif %}
+{% endblock %}

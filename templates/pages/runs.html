@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}Run History & Reports — NIRF Benchmarking{% endblock %}
+
+{% block content %}
+<div class="banner banner-info">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="10"></circle>
+    <polyline points="12 6 12 12 16 14"></polyline>
+  </svg>
+  <div>
+    <strong>Audit History Archive</strong> &mdash;
+    Each row represents one complete extraction run in Postgres. Old runs remain permanently viewable after re-extraction under our strict append-only compliance rule.
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-head">
+    <h2>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+      </svg>
+      Recorded Extraction Runs
+      <span class="badge neutral">{{ runs|length }} runs recorded</span>
+    </h2>
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <input type="search" placeholder="Filter runs..." class="input-control" style="font-size: var(--text-micro); min-height: 30px;" data-table-search="#table-runs" aria-label="Search run history">
+    </div>
+  </div>
+
+  <div class="table-container">
+    <table class="data-table" id="table-runs">
+      <thead>
+        <tr>
+          <th scope="col" class="col-run">Run Identifier</th>
+          <th scope="col" class="col-num">Total Value Rows</th>
+          <th scope="col" class="col-num">Distinct Institutions</th>
+          <th scope="col" class="col-num">Layer 1: Extracted</th>
+          <th scope="col" class="col-num">Layer 2: Domains</th>
+          <th scope="col" class="col-num">Layer 3: Mapped</th>
+          <th scope="col" class="col-num">Layer 4: Orphans</th>
+          <th scope="col" class="col-num">Validation</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in runs %}
+          <tr>
+            <td class="col-run">
+              <code class="font-semibold" style="font-size: var(--text-meta);">{{ r.run_id }}</code>
+              {% if r.run_id == active_run_id %}
+                <span class="badge ok" style="margin-left: 6px;">Active Reference</span>
+              {% endif %}
+            </td>
+            <td class="col-num font-mono font-semibold">{{ r.total_rows }}</td>
+            <td class="col-num">
+              <span class="font-mono font-semibold">{{ r.institutions }}</span>
+              {% if r.inst_codes %}
+                <div class="text-faint" style="font-size: var(--text-micro); max-width: 260px; line-height: 1.3;" title="{{ r.inst_codes|join(', ') }}">
+                  {% for code in r.inst_codes %}
+                    <span>{{ institution_names.get(code, code) }}</span>{% if not loop.last %}, {% endif %}
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </td>
+            <td class="col-num">
+              <a href="/run/{{ r.run_id }}/extracted" class="btn btn-sm">Extracted &rarr;</a>
+            </td>
+            <td class="col-num">
+              <a href="/run/{{ r.run_id }}/domains" class="btn btn-sm">Domains &rarr;</a>
+            </td>
+            <td class="col-num">
+              <a href="/run/{{ r.run_id }}/mapped" class="btn btn-sm">Mapped &rarr;</a>
+            </td>
+            <td class="col-num">
+              <a href="/run/{{ r.run_id }}/orphans" class="btn btn-sm">Orphans &rarr;</a>
+            </td>
+            <td class="col-num">
+              <a href="/run/{{ r.run_id }}/validation" class="btn btn-sm">Validation &rarr;</a>
+            </td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="8">
+              {% include "components/empty_state.html" %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

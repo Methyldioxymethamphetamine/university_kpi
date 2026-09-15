@@ -1,0 +1,48 @@
+{% if total_pages and total_pages > 1 %}
+<nav class="pagination-bar" aria-label="Table pagination">
+  <div class="pagination-info">
+    Showing page <strong>{{ page }}</strong> of <strong>{{ total_pages }}</strong>
+    {% if total_count is defined %} (<strong>{{ total_count }}</strong> total rows){% endif %}
+  </div>
+
+  <div class="pagination-nav">
+    {% set query_prefix = query_string ~ '&' if query_string else '' %}
+
+    <!-- Previous Page -->
+    {% if page > 1 %}
+      <a href="?{{ query_prefix }}page={{ page - 1 }}" class="page-btn" aria-label="Previous page">&larr;</a>
+    {% else %}
+      <span class="page-btn disabled" aria-hidden="true">&larr;</span>
+    {% endif %}
+
+    <!-- Page numbers with smart window -->
+    {% set start_p = [1, page - 2]|max %}
+    {% set end_p = [total_pages, page + 2]|min %}
+
+    {% if start_p > 1 %}
+      <a href="?{{ query_prefix }}page=1" class="page-btn">1</a>
+      {% if start_p > 2 %}<span class="page-btn disabled" style="border:none;">&hellip;</span>{% endif %}
+    {% endif %}
+
+    {% for p in range(start_p, end_p + 1) %}
+      {% if p == page %}
+        <span class="page-btn active" aria-current="page">{{ p }}</span>
+      {% else %}
+        <a href="?{{ query_prefix }}page={{ p }}" class="page-btn">{{ p }}</a>
+      {% endif %}
+    {% endfor %}
+
+    {% if end_p < total_pages %}
+      {% if end_p < total_pages - 1 %}<span class="page-btn disabled" style="border:none;">&hellip;</span>{% endif %}
+      <a href="?{{ query_prefix }}page={{ total_pages }}" class="page-btn">{{ total_pages }}</a>
+    {% endif %}
+
+    <!-- Next Page -->
+    {% if page < total_pages %}
+      <a href="?{{ query_prefix }}page={{ page + 1 }}" class="page-btn" aria-label="Next page">&rarr;</a>
+    {% else %}
+      <span class="page-btn disabled" aria-hidden="true">&rarr;</span>
+    {% endif %}
+  </div>
+</nav>
+{% endif %}

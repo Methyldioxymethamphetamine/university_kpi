@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Validation & Checksums — Layer 5 ({{ run_id }}){% endblock %}
+
+{% block content %}
+<!-- Run Navigation Header -->
+{% include "components/run_nav.html" %}
+
+<!-- Summary Stat Cards -->
+{% include "components/stat_row.html" %}
+
+<!-- Summary Banner -->
+<div class="banner {% if n_conflicting > 0 %}banner-conflict{% else %}banner-info{% endif %}">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+  </svg>
+  <div>
+    <strong>Validation Checksums (Digits &amp; Words Encoding)</strong> &mdash;
+    {% if n_conflicting > 0 %}
+      <strong>{{ n_conflicting }} discrepancy conflict(s) detected</strong> where numerals disagree with verbal representations.
+    {% else %}
+      All evaluated checksum pairs confirm consistency or correctly record abstention reasons.
+    {% endif %}
+    {% if inst_filter %}
+      <div style="margin-top: 4px; font-size: var(--text-micro);">Filtered to: <strong>{{ institution_names.get(inst_filter, inst_filter) }}</strong> (<code>{{ inst_filter }}</code>)</div>
+    {% endif %}
+  </div>
+  {% if inst_filter %}
+    <a href="/run/{{ run_id }}/validation" class="btn btn-sm" style="margin-left: auto;">Clear Filter</a>
+  {% endif %}
+</div>
+
+<!-- Validation Checksum Table -->
+<div class="panel">
+  <div class="panel-head">
+    <h2>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M9 11l3 3L22 4"></path>
+        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+      </svg>
+      Validation Results &amp; Verification Checks
+      <span class="badge ok">{{ checksum_rows|length }} checks</span>
+    </h2>
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <input type="search" placeholder="Search validation checks..." class="input-control" style="font-size: var(--text-micro); min-height: 30px;" data-table-search="#table-validation" aria-label="Search validation rows">
+    </div>
+  </div>
+
+  <div class="table-container">
+    <table class="data-table" id="table-validation">
+      <thead>
+        <tr>
+          <th scope="col" class="col-inst">Institution</th>
+          <th scope="col">Extracted Phrase / Metric</th>
+          <th scope="col" class="col-num">Digits Value</th>
+          <th scope="col" class="col-num">Words Value</th>
+          <th scope="col">Checksum Status</th>
+          <th scope="col">Audit Detail / Evidence</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in checksum_rows %}
+          {% set is_conflict = (c.state == 'CONFLICTING') %}
+          {% set state_badge = (c.state or 'neutral')|lower %}
+          <tr {% if is_conflict %}class="row-conflicting"{% endif %}>
+            <td class="col-inst">
+              {% if c.institution_code %}
+                <div class="font-semibold" style="color: var(--ink);">{{ institution_names.get(c.institution_code, c.institution_code) }}</div>
+                <div class="col-mono text-soft" style="font-size: var(--text-micro);">{{ c.institution_code }}</div>
+              {% else %}
+                <span class="text-faint">—</span>
+              {% endif %}
+            </td>
+            <td>
+              <div class="font-semibold" style="max-width: 320px;">{{ c.raw_value }}</div>
+            </td>
+            <td class="col-num font-mono font-semibold" style="font-size: var(--text-large);">
+              {{ c.digits_value if c.digits_value is not none else '—' }}
+            </td>
+            <td class="col-num font-mono font-semibold" style="font-size: var(--text-large);">
+              {{ c.words_value if c.words_value is not none else '<span class="text-faint">(abstained)</span>'|safe }}
+            </td>
+            <td>
+              <span class="badge {{ state_badge }}">
+                <span class="dot {{ state_badge }}"></span>
+                {{ c.state }}
+              </span>
+            </td>
+            <td>
+              {% if c.abstain_reason %}
+                <div class="text-soft font-mono" style="font-size: var(--text-micro);">Reason: {{ c.abstain_reason }}</div>
+              {% endif %}
+              <div class="text-faint" style="font-size: var(--text-micro);">
+                {% if c.page_no is not none %}p.{{ c.page_no }}{% endif %}
+                {% if c.sha256 %}
+                  <a href="/artifact/{{ c.sha256[:8] }}" class="cite-link">[{{ c.sha256[:8] }}]</a>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="6">
+              {% include "components/empty_state.html" %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

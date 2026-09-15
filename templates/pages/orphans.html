@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}Orphan Concepts — Layer 4 ({{ run_id }}){% endblock %}
+
+{% block content %}
+<!-- Run Navigation Header -->
+{% include "components/run_nav.html" %}
+
+<!-- Summary Bar -->
+<div class="banner banner-info" role="status">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="10"></circle>
+    <line x1="12" y1="16" x2="12" y2="12"></line>
+    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+  </svg>
+  <div>
+    <strong>{{ n_concepts }} Distinct Orphan Concepts</strong> across <strong>{{ n_institutions }} institution(s)</strong> in run <code>{{ run_id }}</code>{% if inst_filter %} for <strong>{{ institution_names.get(inst_filter, inst_filter) }}</strong> (<code>{{ inst_filter }}</code>){% endif %}.
+    <div style="font-size: var(--text-micro); color: var(--ink-soft); margin-top: 4px;">
+      Concept = unique (section, row_label) header pair shared across data cells. Raw orphan rows are preserved without loss.
+    </div>
+  </div>
+  <div style="margin-left: auto; display: flex; align-items: center; gap: 8px;">
+    {% if inst_filter %}
+      <a href="/run/{{ run_id }}/orphans" class="btn btn-sm">Clear Filter</a>
+    {% endif %}
+    {% if n_anomalies and n_anomalies > 0 %}
+      <a href="#anomalies-section" class="badge bad" style="text-decoration: none;">
+        <span class="dot bad"></span> {{ n_anomalies }} Anomaly Rows Flagged for Review
+      </a>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Orphan Concepts Table -->
+<div class="panel">
+  <div class="panel-head">
+    <h2>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+      Distinct Orphan Metric Concepts (No KPI Home)
+      <span class="badge neutral">{{ n_concepts }} concepts</span>
+    </h2>
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <input type="search" placeholder="Search orphan concepts..." class="input-control" style="font-size: var(--text-micro); min-height: 30px;" data-table-search="#table-orphans" aria-label="Search orphan concepts">
+    </div>
+  </div>
+
+  <div class="table-container">
+    <table class="data-table" id="table-orphans">
+      <thead>
+        <tr>
+          <th scope="col" class="col-shrink">#</th>
+          <th scope="col">Section</th>
+          <th scope="col">Concept Row Label</th>
+          <th scope="col">Domain</th>
+          <th scope="col" class="col-num">Raw Rows</th>
+          <th scope="col">Institutions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for grp in orphan_groups %}
+          <tr>
+            <td class="col-shrink font-mono text-faint">{{ loop.index }}</td>
+            <td><strong>{{ grp.section or '—' }}</strong></td>
+            <td>
+              <span class="font-semibold" style="color: var(--ink);">{{ grp.label or '(unlabeled)' }}</span>
+            </td>
+            <td>
+              {% if grp.domain %}
+                <code style="color: var(--derived);">{{ grp.domain }}</code>
+              {% else %}
+                <span class="text-faint">—</span>
+              {% endif %}
+            </td>
+            <td class="col-num font-mono font-semibold">{{ grp.raw_rows }}</td>
+            <td class="col-inst">
+              {% if grp.inst_list and grp.institutions == 1 %}
+                <div class="font-semibold" style="color: var(--ink);">{{ institution_names.get(grp.inst_list[0], grp.inst_list[0]) }}</div>
+                <div class="col-mono text-soft" style="font-size: var(--text-micro);">{{ grp.inst_list[0] }}</div>
+              {% else %}
+                <div class="font-semibold" style="color: var(--ink);">{{ grp.institutions }} Institutions</div>
+                {% if grp.inst_list %}
+                  <div class="text-faint" style="font-size: var(--text-micro);">
+                    {% for c in grp.inst_list %}
+                      <span title="{{ c }}">{{ institution_names.get(c, c) }}</span>{% if not loop.last %}, {% endif %}
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              {% endif %}
+            </td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="6">
+              {% include "components/empty_state.html" %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Anomaly Rows Section if present -->
+{% if anomaly_rows %}
+<div class="panel" id="anomalies-section" style="border-color: #E2ADA3;">
+  <div class="panel-head" style="background-color: var(--bad-soft);">
+    <h2 style="color: var(--bad-text);">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+      Flagged Anomaly Rows (Excluded from Orphan Count)
+      <span class="badge bad">{{ anomaly_rows|length }} rows</span>
+    </h2>
+  </div>
+
+  <div class="table-container">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th scope="col">Institution</th>
+          <th scope="col">Section</th>
+          <th scope="col">Raw Value</th>
+          <th scope="col">Anomaly Reason</th>
+          <th scope="col">Source Citation</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in anomaly_rows %}
+          <tr class="row-conflicting">
+            <td class="col-inst">
+              <div class="font-semibold" style="color: var(--ink);">{{ institution_names.get(row.institution_code, row.institution_code) }}</div>
+              <div class="col-mono text-soft" style="font-size: var(--text-micro);">{{ row.institution_code }}</div>
+            </td>
+            <td>{{ row.section or '—' }}</td>
+            <td><strong class="font-mono">{{ row.raw_value }}</strong></td>
+            <td><span class="badge bad">{{ row.anomaly_reason or 'Anomaly detected' }}</span></td>
+            <td class="col-nowrap">
+              <a href="/artifact/{{ row.sha256[:8] }}" class="cite-link">[{{ row.sha256[:8] }}]</a>
+              {% if row.page_no is not none %}
+                <span class="font-mono text-soft" style="font-size: var(--text-micro);">p.{{ row.page_no }}</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

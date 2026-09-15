@@ -1,0 +1,27 @@
+<header class="topbar">
+  <div class="topbar-left">
+    <button type="button" class="topbar-mobile-toggle" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="app-sidebar">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+    </button>
+    <div class="topbar-titles">
+      <h1>{{ heading or 'NIRF Benchmarking' }}</h1>
+      {% if subheading %}
+      <div class="desc">{{ subheading }}</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="topbar-actions">
+    {% if institution_groups %}
+      {% include "components/institution_selector.html" %}
+    {% endif %}
+
+    {% block topbar_actions %}
+      {% if actions_html %}{{ actions_html|safe }}{% endif %}
+    {% endblock %}
+  </div>
+</header>

@@ -1,0 +1,80 @@
+/* ==========================================================================
+   Design Tokens & CSS Variables
+   NIRF Institutional Benchmarking System
+   ========================================================================== */
+
+:root {
+  /* Surface & Canvas Colors */
+  --paper: #EFF1EC;
+  --panel: #FFFFFF;
+  --panel-alt: #F6F7F3;
+  --panel-hover: #FAFAF8;
+
+  /* Ink & Typography Colors (Contrast AA Compliant) */
+  --ink: #1B231F;
+  --ink-soft: #525B56;           /* > 5.5:1 against --paper, > 6.5:1 against --panel */
+  --ink-faint: #606862;          /* > 4.6:1 against --paper, > 5.4:1 against --panel */
+  --ink-white: #FFFFFF;
+
+  /* Rule & Border Colors */
+  --rule: #D7DAD1;
+  --rule-strong: #B9BEB3;
+  --rule-subtle: #E5E8E1;
+
+  /* Primary Editorial Accent */
+  --accent: #8C6414;             /* 4.9:1 against --paper */
+  --accent-soft: #F1E6CE;
+  --accent-text: #75520D;        /* 5.5:1 against --accent-soft */
+
+  /* Semantic Status: Confirmed / OK */
+  --ok: #20593B;                 /* > 5.5:1 against white */
+  --ok-soft: #E3EDE6;
+  --ok-text: #194C31;            /* > 6.0:1 against --ok-soft */
+
+  /* Semantic Status: Conflicting / Bad */
+  --bad: #A4351E;                /* > 5.2:1 against white */
+  --bad-soft: #F7E5E0;
+  --bad-text: #8E2B16;           /* > 5.8:1 against --bad-soft */
+
+  /* Semantic Status: Neutral / Unverified / Orphan */
+  --neutral: #636159;
+  --neutral-soft: #ECEAE3;
+  --neutral-text: #4D4B44;       /* > 6.5:1 against --neutral-soft */
+
+  /* Semantic Status: Derived */
+  --derived: #285A5D;
+  --derived-soft: #DFEAE9;
+  --derived-text: #1C484B;
+
+  /* Semantic Status: Annexure */
+  --annexure: #583F58;
+  --annexure-soft: #ECE3EC;
+  --annexure-text: #482F48;
+
+  /* Typography Families */
+  --serif: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+  --sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --mono: 'IBM Plex Mono', 'SF Mono', Consolas, Menlo, monospace;
+
+  /* Typography Scale (Strict Legibility Floors) */
+  --text-micro: 12px;            /* Functional floor */
+  --text-meta: 13px;             /* Secondary metadata, table headers */
+  --text-body: 14px;             /* Primary body font size */
+  --text-large: 15px;            /* Emphasized body / section labels */
+  --text-h3: 16px;               /* Small headings / panel titles */
+  --text-h2: 19px;               /* Section headings */
+  --text-h1: 22px;               /* Page headings */
+  --text-display: 28px;          /* Metric numerals */
+
+  /* Geometry & Elevation */
+  --radius-sm: 2px;
+  --radius: 3px;
+  --radius-md: 5px;
+  --radius-pill: 9999px;
+  --shadow-sm: 0 1px 2px rgba(27, 35, 31, 0.04);
+  --shadow-md: 0 3px 8px rgba(27, 35, 31, 0.08);
+
+  /* Layout Widths */
+  --sidebar-width: 240px;
+  --topbar-height: 64px;
+}

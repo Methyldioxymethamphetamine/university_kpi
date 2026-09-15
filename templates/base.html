@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}NIRF Institutional Benchmarking{% endblock %}</title>
+  <meta name="description" content="{% block description %}NIRF Institutional Benchmarking Pipeline Review{% endblock %}">
+
+  <!-- Typography: Source Serif 4, IBM Plex Sans, IBM Plex Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="/static/css/tokens.css">
+  <link rel="stylesheet" href="/static/css/base.css">
+  <link rel="stylesheet" href="/static/css/layout.css">
+  <link rel="stylesheet" href="/static/css/components.css">
+  <link rel="stylesheet" href="/static/css/tables.css">
+  <link rel="stylesheet" href="/static/css/responsive.css">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  <div class="shell">
+    <div class="sidebar-backdrop" aria-hidden="true"></div>
+
+    <!-- Reusable Sidebar -->
+    {% include "components/sidebar.html" %}
+
+    <!-- Main Container -->
+    <div class="main">
+      <!-- Reusable Topbar Header -->
+      {% include "components/topbar.html" %}
+
+      <!-- Page Content -->
+      <main class="content" id="main-content">
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+  </div>
+
+  <!-- Global Scripts -->
+  <script src="/static/js/app.js"></script>
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>

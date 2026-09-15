@@ -1,0 +1,21 @@
+{# Reusable Shared Institution Selector Component #}
+{% set current_inst = current_inst if current_inst is defined else (inst_filter if inst_filter is defined else request.args.get('institution_code', '')) %}
+{% set select_id = select_id or 'inst-nav-select' %}
+{% set select_name = select_name or 'institution_code' %}
+{% set select_class = select_class or 'select-control inst-select-control' %}
+{% set all_label = all_label or '— All Institutions —' %}
+{% set show_label = show_label if show_label is defined else true %}
+
+<div class="institution-selector-wrapper">
+  {% if show_label %}
+  <label for="{{ select_id }}" class="filter-label">Institution:</label>
+  {% endif %}
+  <select id="{{ select_id }}" name="{{ select_name }}" class="{{ select_class }}" aria-label="Select institution filter" title="Select institution filter">
+    <option value="">{{ all_label }}</option>
+    {% for g in institution_groups %}
+      <option value="{{ g.code }}" label="{{ g.name }}" title="{{ g.name }} ({{ g.code }})" {% if current_inst == g.code %}selected{% endif %}>
+        {{ g.name }}
+      </option>
+    {% endfor %}
+  </select>
+</div>

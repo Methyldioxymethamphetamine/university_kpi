@@ -1,0 +1,61 @@
+<aside class="sidebar" id="app-sidebar" aria-label="Main Navigation">
+  <div class="brand">
+    <div class="brand-title-wrap">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D8A545" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+      </svg>
+      <div class="brand-mark">NIRF Benchmarking</div>
+    </div>
+    <div class="brand-sub">Pipeline System Review</div>
+  </div>
+
+  <nav class="mainnav">
+    <!-- OVERVIEW -->
+    <div class="nav-group-label">Overview</div>
+    <a class="navitem {% if active_nav == 'dashboard' %}active{% endif %}" href="/">
+      <span class="n">01</span> Dashboard
+    </a>
+
+    <!-- FOUR LAYERS -->
+    <div class="nav-group-label">Four Layers</div>
+    <a class="navitem {% if active_nav == 'extracted' %}active{% endif %}" href="/run/{{ active_run_id or 'demo_clean_8fixtures' }}/extracted">
+      <span class="n">02</span> Extraction Browser
+    </a>
+    <a class="navitem {% if active_nav == 'mapped' %}active{% endif %}" href="/run/{{ active_run_id or 'demo_clean_8fixtures' }}/mapped">
+      <span class="n">03</span> Dictionary Mapping
+    </a>
+    <a class="navitem {% if active_nav == 'orphans' %}active{% endif %}" href="/run/{{ active_run_id or 'demo_clean_8fixtures' }}/orphans">
+      <span class="n">04</span> Orphan Concepts
+    </a>
+    <a class="navitem {% if active_nav == 'validation' %}active{% endif %}" href="/run/{{ active_run_id or 'demo_clean_8fixtures' }}/validation">
+      <span class="n">05</span> Validation &amp; Checksum
+    </a>
+
+    <!-- CLIENT-FACING -->
+    <div class="nav-group-label">Client-Facing</div>
+    <a class="navitem {% if active_nav == 'brief' %}active{% endif %}" href="/brief">
+      <span class="n">06</span> President Brief
+    </a>
+
+    <!-- AUDIT & UTILITIES -->
+    <div class="nav-group-label">Audit &amp; Utilities</div>
+    <a class="navitem {% if active_nav == 'runs' %}active{% endif %}" href="/runs">
+      <span class="n">&bull;</span> Run History
+    </a>
+    <a class="navitem {% if active_nav == 'domains' %}active{% endif %}" href="/run/{{ active_run_id or 'demo_clean_8fixtures' }}/domains">
+      <span class="n">&bull;</span> Domains Grouping
+    </a>
+    <a class="navitem {% if active_nav == 'scrape' %}active{% endif %}" href="/scrape">
+      <span class="n">&bull;</span> Live Scrape
+    </a>
+    <a class="navitem {% if active_nav == 'test' %}active{% endif %}" href="/test">
+      <span class="n">&bull;</span> Sandbox Testing
+    </a>
+  </nav>
+
+  <div class="sidebar-foot">
+    <div>NIRF Benchmarking Pipeline</div>
+    <div style="margin-top: 4px; color: #7B8277;">Strict Data Integrity &bull; Append-only</div>
+  </div>
+</aside>

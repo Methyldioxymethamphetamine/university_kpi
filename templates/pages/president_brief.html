@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}President Brief — NIRF Benchmarking{% endblock %}
+
+{% block content %}
+<div class="brief-hero-card">
+  <div class="brief-eyebrow">
+    Critical Finding &bull; Sandip SITRC 2025 Overall Submission &bull; UG Placement
+  </div>
+
+  <div class="brief-num-row">
+    <div class="brief-figure">₹37.5L</div>
+    <div class="brief-vs">vs.</div>
+    <div class="brief-figure secondary">₹3.75L</div>
+  </div>
+
+  <div class="brief-tenx">
+    10&times; apart &mdash; same cell, digits vs. words encoding discrepancy
+  </div>
+
+  <p class="brief-caption">
+    A system reading only raw digits reports Sandip’s median graduate salary beating IIT Bombay’s by nearly two to one. However, the regulatory form also requires the amount spelled in words, and the words agree with every neighbouring year and cohort. A naive scraping pipeline would accept and rank the incorrect numerical value without notice &mdash; the number is well-formed, but factually contradictory.
+  </p>
+
+  <div style="display: flex; align-items: center; gap: 8px; font-size: var(--text-meta);">
+    <span class="text-soft">Source Evidence:</span>
+    <a href="https://sitrc.sandipfoundation.org/wp-content/uploads/2025/02/NIRF-Report-2025_Overall.pdf#page=1" target="_blank" rel="noopener" class="cite-link font-semibold">
+      Sandip SITRC &mdash; NIRF 2025 Overall Submission (Page 1) ↗
+    </a>
+    <span class="text-faint">&bull; Corroborated in historical submissions</span>
+  </div>
+
+  <div class="brief-grid">
+    <div class="brief-support-card">
+      <div class="num">72 vs 56</div>
+      <div class="text">
+        <strong>Distinct Metric Concepts:</strong> Sandip’s published submission carries more distinct metric categories than IIT Bombay’s public report. The institution is not publishing less; previous pipelines lacked cross-institutional comparison.
+      </div>
+    </div>
+
+    <div class="brief-support-card">
+      <div class="num">39 of 72</div>
+      <div class="text">
+        <strong>Orphan Concepts:</strong> 39 NIRF concepts have no home in the legacy 229-KPI dictionary (e.g. capex breakdowns, consultancy, lateral entry). The dictionary is incomplete, not the extraction engine.
+      </div>
+    </div>
+
+    <div class="brief-support-card">
+      <div class="num">Opposite Answers</div>
+      <div class="text">
+        <strong>Direct Comparability:</strong> On campus recycling infrastructure, IIT Bombay reports "comprehensive" while Sandip reports "none." Both are self-declared, directly comparable, and auditable without ambiguity.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Supporting Verification Panel -->
+<div class="panel">
+  <div class="panel-head">
+    <h2>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+        <polyline points="14 2 14 8 20 8"></polyline>
+        <line x1="16" y1="13" x2="8" y2="13"></line>
+        <line x1="16" y1="17" x2="8" y2="17"></line>
+        <polyline points="10 9 9 9 8 9"></polyline>
+      </svg>
+      Executive Takeaways &amp; System Safeguards
+    </h2>
+    <span class="badge ok"><span class="dot ok"></span>Production Audit Ready</span>
+  </div>
+
+  <div class="panel-body">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+      <div>
+        <h3 style="font-size: var(--text-h3); margin-bottom: 6px;">Zero Hallucination Tolerance</h3>
+        <p class="text-soft" style="font-size: var(--text-meta);">
+          Candidate matches from newly scraped documents are never automatically accepted into confirmed KPI value rows without human review or profile fingerprint verification.
+        </p>
+      </div>
+
+      <div>
+        <h3 style="font-size: var(--text-h3); margin-bottom: 6px;">Three-State Checksum Engine</h3>
+        <p class="text-soft" style="font-size: var(--text-meta);">
+          Every financial figure with paired digits and verbal notation is verified through automated checksum evaluation, distinguishing confirmed matches from genuine discrepancies.
+        </p>
+      </div>
+
+      <div>
+        <h3 style="font-size: var(--text-h3); margin-bottom: 6px;">Preserved Orphan Concepts</h3>
+        <p class="text-soft" style="font-size: var(--text-meta);">
+          Non-standard institutional disclosures are systematically preserved in Layer 4 rather than discarded, enabling ongoing expansion of regulatory KPI dictionaries.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,10 @@
+{% if stats %}
+<div class="stats-row" role="region" aria-label="Key Metrics">
+  {% for item in stats %}
+  <div class="stat">
+    <div class="num">{{ item.value }}</div>
+    <div class="lbl">{{ item.label }}</div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}

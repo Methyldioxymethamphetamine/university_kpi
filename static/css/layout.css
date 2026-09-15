@@ -1,0 +1,219 @@
+/* ==========================================================================
+   Application Layout: Shell, Sidebar, Topbar, Content Area
+   ========================================================================== */
+
+.shell {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  position: relative;
+}
+
+/* Sidebar */
+.sidebar {
+  width: var(--sidebar-width);
+  flex: 0 0 var(--sidebar-width);
+  background-color: var(--ink);
+  color: #EEEFE9;
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  z-index: 50;
+  transition: transform 0.2s ease-in-out;
+}
+
+.brand {
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brand-mark {
+  font-family: var(--serif);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  line-height: 1.25;
+  color: #FFFFFF;
+}
+
+.brand-sub {
+  font-family: var(--mono);
+  font-size: var(--text-micro);
+  color: #B4B9B0;
+  margin-top: 4px;
+  letter-spacing: 0.02em;
+}
+
+/* Main Navigation */
+nav.mainnav {
+  padding: 12px 10px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.nav-group-label {
+  font-size: var(--text-micro);
+  color: #9BA198;
+  padding: 14px 10px 6px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.nav-group-label:first-child {
+  padding-top: 4px;
+}
+
+.navitem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  padding: 9px 12px;
+  border-radius: var(--radius);
+  border: none;
+  background: transparent;
+  color: #D7DAD1;
+  font-family: var(--sans);
+  font-size: var(--text-meta);
+  cursor: pointer;
+  margin-bottom: 2px;
+  text-decoration: none;
+  min-height: 40px;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.navitem:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #FFFFFF;
+}
+
+.navitem.active {
+  background: rgba(140, 100, 20, 0.28);
+  color: #F8E9CD;
+  font-weight: 500;
+}
+
+.navitem .n {
+  font-family: var(--mono);
+  font-size: var(--text-micro);
+  color: #9BA198;
+  width: 18px;
+  flex: 0 0 18px;
+}
+
+.navitem.active .n {
+  color: #D8A545;
+  font-weight: 600;
+}
+
+.sidebar-foot {
+  padding: 16px 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: var(--text-micro);
+  color: #9BA198;
+  line-height: 1.4;
+}
+
+/* Main Content Column: Consumes 100% available horizontal space */
+.main {
+  flex: 1 1 0%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  width: calc(100% - var(--sidebar-width));
+}
+
+/* Sticky Topbar */
+.topbar {
+  background-color: var(--panel);
+  border-bottom: 1px solid var(--rule);
+  padding: 14px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.topbar-mobile-toggle {
+  display: none;
+  background: transparent;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+  cursor: pointer;
+  color: var(--ink);
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+}
+
+.topbar-mobile-toggle:hover {
+  background: var(--panel-alt);
+}
+
+.topbar-titles {
+  min-width: 0;
+}
+
+.topbar-titles h1 {
+  font-size: var(--text-h1);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.topbar-titles .desc {
+  color: var(--ink-soft);
+  font-size: var(--text-meta);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.topbar-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Content Container: Full available width without artificial constraints */
+.content {
+  flex: 1 1 auto;
+  padding: 24px 32px 80px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.sidebar-backdrop {
+  display: none;
+}
