@@ -210,7 +210,361 @@ def sync_all_known_artifacts(conn: psycopg.Connection) -> int:
 
 
 # --------------------------------------------------------------------- #
-# ROUTE 1 -- browse everything actually scraped
+# PRESENTATION DESIGN SYSTEM (Matching nirf-pipeline-ui-review.html)
+# --------------------------------------------------------------------- #
+
+MOCKUP_CSS = """
+:root{
+  --paper:#EFF1EC;
+  --panel:#FFFFFF;
+  --panel-alt:#F6F7F3;
+  --ink:#1B231F;
+  --ink-soft:#5C6560;
+  --ink-faint:#8A9089;
+  --rule:#D7DAD1;
+  --rule-strong:#B9BEB3;
+  --accent:#A8791E;
+  --accent-soft:#F1E6CE;
+  --ok:#2E6B4C;
+  --ok-soft:#E3EDE6;
+  --bad:#B4432A;
+  --bad-soft:#F5E4DE;
+  --neutral:#8A8578;
+  --neutral-soft:#EDEBE4;
+  --derived:#3B6E71;
+  --derived-soft:#E1EBEA;
+  --annexure:#6B4F6B;
+  --annexure-soft:#EAE3EA;
+  --serif: 'Source Serif 4', Georgia, serif;
+  --sans: 'IBM Plex Sans', -apple-system, sans-serif;
+  --mono: 'IBM Plex Mono', 'SF Mono', monospace;
+  --radius: 3px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;background:var(--paper);color:var(--ink);font-family:var(--sans);}
+body{font-size:13.5px;line-height:1.5;}
+a{color:inherit;}
+
+.shell{display:flex;min-height:100vh;}
+.sidebar{
+  width:240px;flex:0 0 240px;background:var(--ink);color:#EEEFE9;
+  display:flex;flex-direction:column;position:sticky;top:0;height:100vh;
+}
+.brand{padding:22px 20px 16px;border-bottom:1px solid rgba(255,255,255,0.12);}
+.brand-mark{font-family:var(--serif);font-size:16px;font-weight:600;letter-spacing:.2px;line-height:1.25;color:#FFF;}
+.brand-sub{font-family:var(--mono);font-size:10.5px;color:#A9AFA5;margin-top:5px;letter-spacing:.02em;}
+nav.mainnav{padding:14px 10px;flex:1;overflow-y:auto;}
+.nav-group-label{font-size:10px;color:#8D9389;padding:14px 10px 6px;letter-spacing:.05em;text-transform:uppercase;font-weight:600;}
+.nav-group-label:first-child{padding-top:4px;}
+.navitem{
+  display:flex;align-items:center;gap:10px;width:100%;text-align:left;
+  padding:8px 10px;border-radius:var(--radius);border:none;background:transparent;
+  color:#D7DAD1;font-family:var(--sans);font-size:13px;cursor:pointer;margin-bottom:1px;
+  text-decoration:none;
+}
+.navitem:hover{background:rgba(255,255,255,0.06);color:#FFF;}
+.navitem.active{background:rgba(168,121,30,0.22);color:#F3E4C4;}
+.navitem .n{font-family:var(--mono);font-size:10.5px;color:#8D9389;width:18px;flex:0 0 18px;}
+.navitem.active .n{color:var(--accent);}
+.sidebar-foot{padding:16px 20px;border-top:1px solid rgba(255,255,255,0.12);font-size:11px;color:#8D9389;line-height:1.4;}
+
+.main{flex:1;min-width:0;display:flex;flex-direction:column;}
+.topbar{
+  background:var(--panel);border-bottom:1px solid var(--rule);
+  padding:18px 36px;display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:10;
+}
+.topbar-left h1{font-family:var(--serif);font-weight:600;font-size:21px;margin:0;color:var(--ink);}
+.topbar-left .desc{color:var(--ink-soft);font-size:12.5px;margin-top:3px;}
+.topbar-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+
+.content{padding:28px 36px 80px;max-width:1280px;width:100%;}
+
+.docbtn{
+  font-family:var(--sans);font-size:12px;padding:6px 12px;border-radius:var(--radius);
+  border:1px solid var(--rule-strong);background:var(--panel);color:var(--ink-soft);
+  cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:5px;font-weight:500;
+}
+.docbtn:hover{background:var(--panel-alt);color:var(--ink);}
+.docbtn.active{background:var(--ink);color:#F3E4C4;border-color:var(--ink);}
+
+.stats-row{display:flex;gap:1px;background:var(--rule);border:1px solid var(--rule);margin-bottom:24px;border-radius:var(--radius);overflow:hidden;}
+.stat{background:var(--panel);flex:1;padding:14px 18px;}
+.stat .num{font-family:var(--serif);font-size:24px;font-weight:600;color:var(--ink);}
+.stat .lbl{font-size:11.5px;color:var(--ink-soft);margin-top:3px;}
+
+.panel{background:var(--panel);border:1px solid var(--rule);border-radius:var(--radius);margin-bottom:24px;box-shadow:0 1px 2px rgba(0,0,0,0.02);}
+.panel-head{padding:14px 18px;border-bottom:1px solid var(--rule);display:flex;justify-content:space-between;align-items:center;}
+.panel-head h3{font-family:var(--serif);font-size:15px;font-weight:600;margin:0;display:flex;align-items:center;gap:8px;color:var(--ink);}
+.panel-body{padding:18px;}
+.panel-body.flush{padding:0;}
+
+table.reg{width:100%;border-collapse:collapse;background:var(--panel);}
+table.reg th{
+  text-align:left;font-size:11px;font-weight:600;color:var(--ink-soft);
+  padding:10px 14px;border-bottom:1px solid var(--rule-strong);white-space:nowrap;
+  text-transform:uppercase;letter-spacing:0.04em;
+}
+table.reg td{padding:10px 14px;border-bottom:1px solid var(--rule);font-size:13px;vertical-align:middle;}
+table.reg tr:last-child td{border-bottom:none;}
+table.reg tbody tr:hover{background:var(--panel-alt);}
+
+.mono{font-family:var(--mono);font-size:12px;}
+.badge{
+  display:inline-flex;align-items:center;gap:5px;font-size:11px;font-family:var(--sans);
+  padding:2.5px 8px;border-radius:12px;font-weight:500;white-space:nowrap;
+}
+.dot{width:7px;height:7px;border-radius:50%;flex:0 0 7px;}
+.dot.ok{background:var(--ok);} .dot.bad{background:var(--bad);} .dot.neutral{background:var(--neutral);}
+.dot.derived{background:var(--derived);} .dot.annexure{background:var(--annexure);} .dot.accent{background:var(--accent);}
+
+.badge.ok,.badge.confirmed,.badge.match,.badge.direct{background:var(--ok-soft);color:var(--ok);}
+.badge.bad,.badge.conflicting,.badge.anomaly{background:var(--bad-soft);color:var(--bad);}
+.badge.neutral,.badge.none,.badge.unverified,.badge.orphan{background:var(--neutral-soft);color:#6B6E63;}
+.badge.derived{background:var(--derived-soft);color:var(--derived);}
+.badge.annexure{background:var(--annexure-soft);color:var(--annexure);}
+.badge.accent,.badge.partial,.badge.unreviewed{background:var(--accent-soft);color:#8C6414;}
+
+.cite-link{font-family:var(--mono);font-size:11.5px;color:var(--derived);text-decoration:none;border-bottom:1px dotted var(--derived);}
+.cite-link:hover{border-bottom-style:solid;}
+
+details.reveal{margin-top:14px;border-top:1px dashed var(--rule-strong);padding-top:12px;}
+details.reveal summary{cursor:pointer;font-size:12.5px;color:var(--derived);list-style:none;font-weight:500;}
+details.reveal summary::before{content:"▸ ";}
+details.reveal[open] summary::before{content:"▾ ";}
+details.reveal .evidence-box{
+  margin-top:10px;background:var(--panel-alt);border:1px solid var(--rule);border-radius:var(--radius);
+  padding:12px 14px;font-family:var(--mono);font-size:11.5px;line-height:1.7;color:var(--ink);white-space:pre-wrap;
+  word-break:break-all;
+}
+
+.val-primary{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--ink);}
+.val-muted{color:var(--ink-faint);font-style:italic;font-size:12.5px;}
+.field-name{font-weight:500;font-size:13px;color:var(--ink);}
+.field-sub{font-size:11.5px;color:var(--ink-soft);margin-top:2px;}
+"""
+
+_INSTITUTION_NAME_CACHE: dict[str, str] = {}
+
+
+def get_institution_human_name(code: str, manifest: dict | None = None) -> str:
+    if manifest and manifest.get("institution_name"):
+        return manifest["institution_name"]
+    global _INSTITUTION_NAME_CACHE
+    if not _INSTITUTION_NAME_CACHE:
+        for mp in DOCS_ROOT.glob("*/manifest.json"):
+            try:
+                m = json.loads(mp.read_text())
+                c = m.get("institution_code")
+                n = m.get("institution_name")
+                if c and n and c not in _INSTITUTION_NAME_CACHE:
+                    _INSTITUTION_NAME_CACHE[c] = n
+            except Exception:
+                pass
+        _INSTITUTION_NAME_CACHE.setdefault("IR-E-C-36995", "Sri Krishna College of Engineering and Technology")
+        _INSTITUTION_NAME_CACHE.setdefault("IR-O-C-41520", "Sandip Institute of Technology & Research Centre")
+        _INSTITUTION_NAME_CACHE.setdefault("IR-E-I-1480", "Thapar Institute of Engineering and Technology (Deemed-to-be-university)")
+        _INSTITUTION_NAME_CACHE.setdefault("IR-E-C-16604", "Sri Sivasubramaniya Nadar College of Engineering")
+        _INSTITUTION_NAME_CACHE.setdefault("IR-E-U-0456", "Indian Institute of Technology Madras")
+        _INSTITUTION_NAME_CACHE.setdefault("IR-E-U-0391", "Birla Institute of Technology & Science - Pilani")
+        _INSTITUTION_NAME_CACHE.setdefault("IR-E-I-1074", "Indian Institute of Technology Delhi")
+        _INSTITUTION_NAME_CACHE.setdefault("IR-O-U-0306", "Indian Institute of Technology Bombay")
+        _INSTITUTION_NAME_CACHE.setdefault("MIT", "Massachusetts Institute of Technology")
+    return _INSTITUTION_NAME_CACHE.get(code, code)
+
+
+def resolve_document_meta(manifest: dict) -> tuple[str, str]:
+    code = manifest.get("institution_code") or ""
+    url = manifest.get("canonical_url") or ""
+    src = manifest.get("source_id") or ""
+    cat = "Institutional"
+    if "Overall" in url or "overall" in src or code.startswith("IR-O-"):
+        cat = "Overall"
+    elif "Engineering" in url or "engineering" in src or code.startswith("IR-E-"):
+        cat = "Engineering"
+    elif "Management" in url or code.startswith("IR-M-"):
+        cat = "Management"
+    elif "MIT" in code or "common_data_set" in src:
+        cat = "Common Data Set"
+
+    m = re.search(r'202[0-9]', url + " " + src)
+    if m:
+        year = m.group(0)
+    elif manifest.get("period_value"):
+        year = str(manifest.get("period_value"))
+    else:
+        year = "2025"
+    return year, cat
+
+
+def get_all_institution_artifacts() -> list[dict]:
+    items = []
+    seen = set()
+    for mp in sorted(DOCS_ROOT.glob("*/manifest.json")):
+        try:
+            m = json.loads(mp.read_text())
+            code = m.get("institution_code", "")
+            sha256 = m.get("sha256", "")
+            sha8 = sha256[:8]
+            name = get_institution_human_name(code, m)
+            year, cat = resolve_document_meta(m)
+            key = (code, sha8)
+            if key not in seen:
+                seen.add(key)
+                items.append({
+                    "sha8": sha8,
+                    "sha256": sha256,
+                    "code": code,
+                    "name": name,
+                    "year": year,
+                    "category": cat,
+                })
+        except Exception:
+            pass
+    items.sort(key=lambda x: x["name"])
+    return items
+
+
+def get_institutions_grouped() -> list[dict]:
+    """Return one entry per unique institution (code), each with a list of
+    their artifacts sorted by year. Used for the institution selector hub
+    and the topbar dropdown."""
+    groups: dict[str, dict] = {}
+    for mp in sorted(DOCS_ROOT.glob("*/manifest.json")):
+        try:
+            m = json.loads(mp.read_text())
+            code = m.get("institution_code", "")
+            if not code:
+                continue
+            sha256 = m.get("sha256", "")
+            sha8 = sha256[:8]
+            name = get_institution_human_name(code, m)
+            year, cat = resolve_document_meta(m)
+            if code not in groups:
+                groups[code] = {"code": code, "name": name, "docs": []}
+            groups[code]["docs"].append({
+                "sha8": sha8, "sha256": sha256,
+                "year": year, "category": cat,
+            })
+        except Exception:
+            pass
+    result = list(groups.values())
+    result.sort(key=lambda x: x["name"])
+    for g in result:
+        g["docs"].sort(key=lambda d: d["year"])
+    return result
+
+
+def render_presentation_shell(
+    title: str,
+    heading: str,
+    subheading: str,
+    content_html: str,
+    active_nav: str = "artifacts",
+    actions_html: str = "",
+    run_id: str = "demo_clean_8fixtures",
+    current_sha8: str = "",
+) -> str:
+    nav_items = [
+        ("dashboard", "01", "Dashboard", "/runs"),
+        ("institutes", "02", "Institutions", "/institutes"),
+        ("artifacts", "03", "Inventory", "/"),
+        ("extracted", "04", "Extraction Browser", f"/run/{run_id}/extracted"),
+        ("domains", "05", "Domains", f"/run/{run_id}/domains"),
+        ("mapped", "06", "Dictionary Mapping", f"/run/{run_id}/mapped"),
+        ("orphans", "07", "Orphan Concepts", f"/run/{run_id}/orphans"),
+        ("scrape", "08", "Scrape Live", "/scrape"),
+        ("test", "09", "Sandbox Testing", "/test"),
+    ]
+
+    nav_links_html = []
+    nav_links_html.append('<div class="nav-group-label">Overview</div>')
+    for key, num, label, url in nav_items[:3]:
+        is_active = ' active' if active_nav == key else ''
+        nav_links_html.append(f'<a class="navitem{is_active}" href="{url}"><span class="n">{num}</span> {label}</a>')
+
+    nav_links_html.append('<div class="nav-group-label">Four Layers</div>')
+    for key, num, label, url in nav_items[3:7]:
+        is_active = ' active' if active_nav == key else ''
+        nav_links_html.append(f'<a class="navitem{is_active}" href="{url}"><span class="n">{num}</span> {label}</a>')
+
+    nav_links_html.append('<div class="nav-group-label">Utilities</div>')
+    for key, num, label, url in nav_items[7:]:
+        is_active = ' active' if active_nav == key else ''
+        nav_links_html.append(f'<a class="navitem{is_active}" href="{url}"><span class="n">{num}</span> {label}</a>')
+
+    # Build the topbar institution selector
+    inst_groups = get_institutions_grouped()
+    inst_opts = ['<option value="">— Select institution —</option>']
+    for g in inst_groups:
+        first_sha8 = g["docs"][0]["sha8"] if g["docs"] else ""
+        sel = ' selected' if any(d["sha8"] == current_sha8 for d in g["docs"]) else ''
+        short_name = g["name"][:55] + '…' if len(g["name"]) > 55 else g["name"]
+        doc_count = len(g["docs"])
+        inst_opts.append(
+            f'<option value="{first_sha8}"{sel}>'
+            f'{escape(short_name)} ({doc_count} doc{"s" if doc_count != 1 else ""})</option>'
+        )
+    inst_selector = (
+        '<select id="inst-nav-select" '
+        'style="font-family:var(--sans);font-size:12px;padding:5px 10px;'
+        'border-radius:var(--radius);border:1px solid var(--rule-strong);'
+        'background:var(--panel);color:var(--ink);cursor:pointer;max-width:320px;" '
+        'onchange="var v=this.value;if(v)window.location.href=\'/artifact/\'+v">'
+        + ''.join(inst_opts)
+        + '</select>'
+    )
+
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>{title}</title>
+<meta name="description" content="NIRF Institutional Benchmarking Pipeline Review">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+{MOCKUP_CSS}
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">NIRF Benchmarking</div>
+      <div class="brand-sub">Pipeline System Review</div>
+    </div>
+    <nav class="mainnav">
+      {"".join(nav_links_html)}
+    </nav>
+    <div class="sidebar-foot">NIRF Institutional Benchmarking<br>Executive Presentation UI</div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h1>{heading}</h1>
+        <div class="desc">{subheading}</div>
+      </div>
+      <div class="topbar-actions">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="font-size:11.5px;color:var(--ink-soft);white-space:nowrap;">Institution:</span>
+          {inst_selector}
+        </div>
+        {actions_html}
+      </div>
+    </div>
+    <div class="content">
+      {content_html}
+    </div>
+  </div>
+</div>
+</body>
+</html>"""
+
+
+# --------------------------------------------------------------------- #
+# ROUTE 1 -- browse everything actually scraped (Inventory)
 # --------------------------------------------------------------------- #
 
 @app.route("/")
@@ -224,107 +578,476 @@ def index():
             cur.execute("SELECT * FROM artifact ORDER BY source_id, fetched_at")
             artifacts = cur.fetchall()
 
+    if request.args.get("debug") == "1":
+        by_source: dict[str, list[dict]] = {}
+        for a in artifacts:
+            by_source.setdefault(a["source_id"], []).append(a)
+
+        html = [PAGE_HEAD.format(title="Inventory (Debug)")]
+        html.append(f'<div class="note" style="margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center;">'
+                    f'<span><strong>Debug View</strong> &mdash; Raw source &amp; artifact columns</span>'
+                    f'<a href="{request.path}">Switch to Presentation View &rarr;</a></div>')
+        html.append(f"<h1>Everything actually scraped</h1>")
+        for src in sources:
+            arts = by_source.get(src["source_id"], [])
+            html.append(f'<h2>{escape(src["institution_code"])} ({escape(src["source_id"])})</h2>')
+            html.append("<table><thead><tr><th>sha256</th><th>URL</th><th>classify_label</th><th>match_status</th><th>pages</th><th>fetched_at</th><th></th></tr></thead><tbody>")
+            for a in arts:
+                badge = a["match_status"].lower()
+                html.append(
+                    f'<tr><td><code>{a["sha256"][:8]}</code></td>'
+                    f'<td><a href="{escape(a["url"])}">{escape(a["url"][:70])}</a></td>'
+                    f'<td>{escape(a["classify_label"])}</td>'
+                    f'<td><span class="badge {badge}">{a["match_status"]}</span></td>'
+                    f'<td>{a["n_pages"] if a["n_pages"] is not None else "?"}</td>'
+                    f'<td>{a["fetched_at"]}</td>'
+                    f'<td><a href="/artifact/{a["sha256"][:8]}?debug=1">raw debug</a></td></tr>'
+                )
+            html.append("</tbody></table>")
+        html.append(PAGE_TAIL)
+        return "".join(html)
+
     by_source: dict[str, list[dict]] = {}
     for a in artifacts:
         by_source.setdefault(a["source_id"], []).append(a)
 
-    html = [PAGE_HEAD.format(title="Inventory")]
-    html.append(f"<h1>Everything actually scraped</h1>")
-    html.append(f'<p>Queried live from Postgres (<code>source</code> + <code>artifact</code> tables) '
-                f'just now. {newly_synced} artifact(s) newly synced into the inventory this request '
-                f'(from <code>docs/*/manifest.json</code> on disk, not previously in Postgres). '
-                f'{len(sources)} source institution(s), {len(artifacts)} artifact(s) total.</p>')
+    body = []
+    body.append(f"""
+    <div class="stats-row">
+      <div class="stat"><div class="num">{len(sources)}</div><div class="lbl">universities / sources</div></div>
+      <div class="stat"><div class="num">{len(artifacts)}</div><div class="lbl">acquired documents</div></div>
+      <div class="stat"><div class="num">{newly_synced}</div><div class="lbl">newly synced this request</div></div>
+    </div>
+    """)
 
+    body.append('<div class="panel">')
+    body.append('<div class="panel-head"><h3>All Acquired Institutions &amp; Documents</h3><span class="mono" style="font-size:11.5px;color:var(--ink-faint);">Postgres inventory</span></div>')
+    body.append('<div class="panel-body flush">')
+    body.append('<table class="reg"><thead><tr>'
+                '<th>University</th><th>Category / Source ID</th><th>Artifact SHA</th><th>Pages</th><th>Status</th><th>View</th>'
+                '</tr></thead><tbody>')
     for src in sources:
         arts = by_source.get(src["source_id"], [])
-        html.append(f'<h2>{escape(src["institution_code"])} <span style="color:#888;font-weight:normal">'
-                    f'({escape(src["source_id"])}, {escape(src["country"])}, {escape(src["entry_type"])})</span></h2>')
-        html.append("<table><thead><tr><th>sha256</th><th>URL</th><th>classify_label</th>"
-                    "<th>match_status</th><th>pages</th><th>fetched_at</th><th></th></tr></thead><tbody>")
+        h_name = get_institution_human_name(src["institution_code"])
         for a in arts:
-            badge = a["match_status"].lower()
-            html.append(
-                f'<tr><td><code>{a["sha256"][:8]}</code></td>'
-                f'<td><a href="{escape(a["url"])}">{escape(a["url"][:70])}</a></td>'
-                f'<td>{escape(a["classify_label"])}</td>'
-                f'<td><span class="badge {badge}">{a["match_status"]}</span></td>'
-                f'<td>{a["n_pages"] if a["n_pages"] is not None else "?"}</td>'
-                f'<td>{a["fetched_at"]}</td>'
-                f'<td><a href="/artifact/{a["sha256"][:8]}">view extracted rows</a></td></tr>'
+            sha8 = a["sha256"][:8]
+            badge_cls = a["match_status"].lower()
+            body.append(
+                f'<tr>'
+                f'<td><div><strong>{escape(h_name)}</strong></div><div class="mono" style="font-size:11px;color:var(--ink-soft);">{escape(src["institution_code"])} ({escape(src["country"])})</div></td>'
+                f'<td><code style="font-size:11.5px;">{escape(src["source_id"])}</code></td>'
+                f'<td><code style="font-weight:600;">{sha8}</code></td>'
+                f'<td class="mono">{a["n_pages"] if a["n_pages"] is not None else "—"}</td>'
+                f'<td><span class="badge {badge_cls}"><span class="dot {badge_cls}"></span>{escape(a["match_status"])}</span></td>'
+                f'<td><a class="docbtn" href="/artifact/{sha8}">View Presentation &rarr;</a></td>'
+                f'</tr>'
             )
-        html.append("</tbody></table>")
-
     if not sources:
-        html.append("<p><em>No artifacts acquired yet.</em></p>")
+        body.append('<tr><td colspan="6"><em>No artifacts acquired yet.</em></td></tr>')
+    body.append('</tbody></table></div></div>')
 
-    html.append(PAGE_TAIL)
-    return "".join(html)
+    return render_presentation_shell(
+        title="Inventory — NIRF Benchmarking",
+        heading="All Acquired Institutions",
+        subheading=f"Live inventory: {len(sources)} institutions, {len(artifacts)} acquired documents across repositories",
+        content_html="".join(body),
+        active_nav="artifacts",
+        actions_html=f'<a class="docbtn" href="{request.path}?debug=1">Debug View</a>',
+    )
 
 
-@app.route("/artifact/<sha8>")
-def artifact_detail(sha8: str):
-    matches = list(DOCS_ROOT.glob(f"{sha8}*/manifest.json"))
+@app.route("/artifact/<sha>")
+def artifact_detail(sha: str):
+    matches = list(DOCS_ROOT.glob(f"{sha}*/manifest.json"))
+    if not matches and len(sha) >= 8:
+        matches = list(DOCS_ROOT.glob(f"{sha[:8]}*/manifest.json"))
     if not matches:
-        return f"<p>No artifact found for sha8={escape(sha8)}</p>", 404
+        return f"<p>No artifact found for sha={escape(sha)}</p>", 404
     manifest = json.loads(matches[0].read_text())
     sha256 = manifest["sha256"]
     label = manifest.get("classify", {}).get("label", "(not classified)")
 
-    html = [PAGE_HEAD.format(title=f"Artifact {sha8}")]
-    html.append(f"<h1>Artifact <code>{sha256}</code></h1>")
-    html.append(f'<p>source_id={escape(manifest.get("source_id",""))} &middot; '
-                f'institution_code={escape(manifest.get("institution_code",""))} &middot; '
-                f'classify_label={escape(label)} &middot; '
-                f'url=<a href="{escape(manifest.get("canonical_url",""))}">{escape(manifest.get("canonical_url",""))}</a></p>')
+    # Debug view preservation (?debug=1)
+    if request.args.get("debug") == "1":
+        html = [PAGE_HEAD.format(title=f"Debug: Artifact {sha[:8]}")]
+        html.append(f'<div class="note" style="margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center;">'
+                    f'<span><strong>Debug View</strong> &mdash; Raw extractor &amp; Postgres columns</span>'
+                    f'<a href="{request.path}">Switch to Presentation View &rarr;</a></div>')
+        html.append(f"<h1>Artifact <code>{sha256}</code></h1>")
+        html.append(f'<p>source_id={escape(manifest.get("source_id",""))} &middot; '
+                    f'institution_code={escape(manifest.get("institution_code",""))} &middot; '
+                    f'classify_label={escape(label)} &middot; '
+                    f'url=<a href="{escape(manifest.get("canonical_url",""))}">{escape(manifest.get("canonical_url",""))}</a></p>')
+
+        if load_docling_json(sha256) is None:
+            html.append(f'<div class="note">This artifact has not been converted (label={escape(label)} -- '
+                        f'no <code>docling.json</code> exists). Nothing to extract. Shown plainly, not omitted.</div>')
+            html.append(PAGE_TAIL)
+            return "".join(html)
+
+        result = extract_artifact(manifest)
+        if result.error:
+            html.append(f'<div class="note">extract_artifact reported an error: {escape(result.error)}</div>')
+            html.append(PAGE_TAIL)
+            return "".join(html)
+
+        html.append(f"<h2>Value rows ({len(result.value_rows)}) -- raw extracted fields, no KPI code assigned (P-16)</h2>")
+        html.append("<table><thead><tr><th>row_label</th><th>column_label</th><th>raw_value</th>"
+                    "<th>normalized_value</th><th>dash_state</th><th>period</th><th>page_no</th><th>bbox</th></tr></thead><tbody>")
+        for v in result.value_rows:
+            page_cell = v.page_no if v.page_no is not None else '<em>none (no per-page citation for this source type)</em>'
+            bbox_cell = escape(json.dumps(v.bbox)) if v.bbox else '<em>none</em>'
+            html.append(
+                f"<tr><td>{escape(v.row_label or '')}</td><td>{escape(v.column_label or '')}</td>"
+                f"<td>{escape(v.raw_value)}</td><td>{v.normalized_value if v.normalized_value is not None else ''}</td>"
+                f"<td>{v.dash_state}</td><td>{escape(v.period_value or '')} ({v.period_type or 'none'})</td>"
+                f"<td>{page_cell}</td><td>{bbox_cell}</td></tr>"
+            )
+        html.append("</tbody></table>")
+
+        html.append(f"<h2>Checksum rows ({len(result.checksum_rows)}) -- digits(words) pairs, three-state (P-7)</h2>")
+        html.append("<table><thead><tr><th>raw_value</th><th>digits</th><th>words</th><th>state</th>"
+                    "<th>abstain_reason</th><th>page_no</th><th>bbox</th></tr></thead><tbody>")
+        for c in result.checksum_rows:
+            page_cell = c.page_no if c.page_no is not None else '<em>none</em>'
+            bbox_cell = escape(json.dumps(c.bbox)) if c.bbox else '<em>none</em>'
+            badge = c.state.lower()
+            html.append(
+                f"<tr><td>{escape(c.raw_value)}</td><td>{c.digits_value}</td>"
+                f"<td>{c.words_value if c.words_value is not None else '(abstained)'}</td>"
+                f'<td><span class="badge {badge}">{c.state}</span></td>'
+                f"<td>{c.abstain_reason or ''}</td><td>{page_cell}</td><td>{bbox_cell}</td></tr>"
+            )
+        html.append("</tbody></table>")
+
+        if result.cross_check:
+            cc = result.cross_check
+            html.append(f'<div class="note">P-11 geometric cross-check: docling={cc.docling_pair_count} '
+                        f'geometric={cc.geometric_pair_count} agree={cc.agrees}</div>')
+
+        html.append(PAGE_TAIL)
+        return "".join(html)
+
+    # Presentation view (default)
+    inst_name = get_institution_human_name(manifest.get("institution_code", ""), manifest)
+    doc_year, doc_cat = resolve_document_meta(manifest)
+    subheading = f"{doc_year} &middot; {doc_cat} Category &middot; Ref: {escape(manifest.get('institution_code', ''))}"
+
+    inst_groups = get_institutions_grouped()
+    sha8_current = sha[:8]
+
+    # Build document-level selector grouped by institution
+    opt_list = ['<option value="">— Jump to a document —</option>']
+    for g in inst_groups:
+        opt_list.append(f'<optgroup label="{escape(g["name"])}">')
+        for doc in g["docs"]:
+            sel = " selected" if doc["sha8"] == sha8_current else ""
+            label = f"{doc['year']} · {doc['category']} ({doc['sha8']})"
+            opt_list.append(f'<option value="{doc["sha8"]}"{sel}>{escape(label)}</option>')
+        opt_list.append('</optgroup>')
+
+    actions = []
+    canon_url = manifest.get("canonical_url", "")
+    if canon_url and canon_url.startswith("http"):
+        actions.append(f'<a class="docbtn" href="{escape(canon_url)}" target="_blank" rel="noopener">source PDF &#8599;</a>')
+    actions.append(f'<a class="docbtn" href="{request.path}?debug=1">Debug view</a>')
+    actions_html = "".join(actions)
+
+    body = []
+
+    # Document Selector Banner (within the institution)
+    body.append(f"""
+    <div style="background:var(--panel);border:1px solid var(--rule);padding:12px 18px;margin-bottom:20px;border-radius:var(--radius);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <label style="font-weight:500;color:var(--ink-soft);font-size:12.5px;white-space:nowrap;">Document:</label>
+        <select class="docbtn" style="cursor:pointer;font-size:12.5px;padding:6px 12px;max-width:520px;" onchange="if(this.value) window.location.href='/artifact/'+this.value">
+          {''.join(opt_list)}
+        </select>
+      </div>
+      <a href="/institutes" style="font-size:12px;color:var(--derived);text-decoration:none;">&#8592; All Institutions</a>
+    </div>
+    """)
 
     if load_docling_json(sha256) is None:
-        html.append(f'<div class="note">This artifact has not been converted (label={escape(label)} -- '
-                    f'no <code>docling.json</code> exists). Nothing to extract. Shown plainly, not omitted.</div>')
-        html.append(PAGE_TAIL)
-        return "".join(html)
+        body.append(f'<div class="panel"><div class="panel-body">'
+                    f'<p style="color:var(--ink-soft);margin:0;">This artifact has not been converted (classification: <code>{escape(label)}</code> &mdash; '
+                    f'no <code>docling.json</code> exists). Nothing to extract.</p></div></div>')
+        return render_presentation_shell(
+            title=f"{inst_name} — Artifact",
+            heading=escape(inst_name),
+            subheading=subheading,
+            content_html="".join(body),
+            active_nav="artifacts",
+            actions_html=actions_html,
+        )
 
-    result = extract_artifact(manifest)  # extract/pipeline.py, unchanged -- this call IS the reuse
+    result = extract_artifact(manifest)
     if result.error:
-        html.append(f'<div class="note">extract_artifact reported an error: {escape(result.error)}</div>')
-        html.append(PAGE_TAIL)
-        return "".join(html)
+        body.append(f'<div class="panel"><div class="panel-body" style="background:var(--bad-soft);color:var(--bad);">'
+                    f'extract_artifact reported an error: {escape(result.error)}</div></div>')
+        return render_presentation_shell(
+            title=f"{inst_name} — Artifact",
+            heading=escape(inst_name),
+            subheading=subheading,
+            content_html="".join(body),
+            active_nav="artifacts",
+            actions_html=actions_html,
+        )
 
-    html.append(f"<h2>Value rows ({len(result.value_rows)}) -- raw extracted fields, no KPI code assigned (P-16)</h2>")
-    html.append("<table><thead><tr><th>row_label</th><th>column_label</th><th>raw_value</th>"
-                "<th>normalized_value</th><th>dash_state</th><th>period</th><th>page_no</th><th>bbox</th></tr></thead><tbody>")
+    n_total = len(result.value_rows)
+    n_reported = sum(1 for v in result.value_rows if v.dash_state != "DASH")
+    n_not_reported = sum(1 for v in result.value_rows if v.dash_state == "DASH")
+    n_checksums = len(result.checksum_rows)
+    n_confirmed = sum(1 for c in result.checksum_rows if c.state == "CONFIRMED")
+    n_pages = manifest.get("convert", {}).get("n_pages") or manifest.get("classify", {}).get("n_pages") or "—"
+
+    body.append(f"""
+    <div class="stats-row">
+      <div class="stat"><div class="num">{n_total}</div><div class="lbl">fields extracted</div></div>
+      <div class="stat"><div class="num">{n_reported}</div><div class="lbl">values reported</div></div>
+      <div class="stat"><div class="num">{n_not_reported}</div><div class="lbl">not reported (dash)</div></div>
+      <div class="stat"><div class="num">{n_confirmed} / {n_checksums}</div><div class="lbl">checksums confirmed</div></div>
+      <div class="stat"><div class="num">{n_pages}</div><div class="lbl">document pages</div></div>
+    </div>
+    """)
+
+    # Value rows table
+    body.append('<div class="panel">')
+    body.append(f'<div class="panel-head"><h3>Extracted Document Fields <span class="badge ok">{n_total} items</span></h3>'
+                f'<span class="mono" style="font-size:11px;color:var(--ink-faint)">Layer 1: Geometric parse</span></div>')
+    body.append('<div class="panel-body flush">')
+    body.append('<table class="reg"><thead><tr>'
+                '<th>Field / Program</th><th>Period</th><th>Extracted Value</th><th>Evidence</th>'
+                '</tr></thead><tbody>')
     for v in result.value_rows:
-        page_cell = v.page_no if v.page_no is not None else '<em>none (no per-page citation for this source type)</em>'
-        bbox_cell = escape(json.dumps(v.bbox)) if v.bbox else '<em>none</em>'
-        html.append(
-            f"<tr><td>{escape(v.row_label or '')}</td><td>{escape(v.column_label or '')}</td>"
-            f"<td>{escape(v.raw_value)}</td><td>{v.normalized_value if v.normalized_value is not None else ''}</td>"
-            f"<td>{v.dash_state}</td><td>{escape(v.period_value or '')} ({v.period_type or 'none'})</td>"
-            f"<td>{page_cell}</td><td>{bbox_cell}</td></tr>"
-        )
-    html.append("</tbody></table>")
+        row_lbl = escape(v.row_label or '(unlabeled)')
+        col_lbl = escape(v.column_label or '')
+        period_lbl = escape(v.period_value or '')
 
-    html.append(f"<h2>Checksum rows ({len(result.checksum_rows)}) -- digits(words) pairs, three-state (P-7)</h2>")
-    html.append("<table><thead><tr><th>raw_value</th><th>digits</th><th>words</th><th>state</th>"
-                "<th>abstain_reason</th><th>page_no</th><th>bbox</th></tr></thead><tbody>")
-    for c in result.checksum_rows:
-        page_cell = c.page_no if c.page_no is not None else '<em>none</em>'
-        bbox_cell = escape(json.dumps(c.bbox)) if c.bbox else '<em>none</em>'
-        badge = c.state.lower()
-        html.append(
-            f"<tr><td>{escape(c.raw_value)}</td><td>{c.digits_value}</td>"
-            f"<td>{c.words_value if c.words_value is not None else '(abstained)'}</td>"
-            f'<td><span class="badge {badge}">{c.state}</span></td>'
-            f"<td>{c.abstain_reason or ''}</td><td>{page_cell}</td><td>{bbox_cell}</td></tr>"
-        )
-    html.append("</tbody></table>")
+        if col_lbl and col_lbl != period_lbl:
+            field_display = f'<div class="field-name">{row_lbl}</div><div class="field-sub">{col_lbl}</div>'
+        else:
+            field_display = f'<div class="field-name">{row_lbl}</div>'
 
+        period_display = f'<span class="mono">{period_lbl or col_lbl or "&mdash;"}</span>'
+
+        if v.dash_state == "DASH":
+            val_display = '<span class="val-muted">Not reported</span>'
+        else:
+            val_display = f'<span class="val-primary">{escape(v.raw_value)}</span>'
+
+        page_str = f"p.{v.page_no}" if v.page_no is not None else "p.&mdash;"
+        bbox_json = escape(json.dumps(v.bbox)) if v.bbox else "null"
+        evidence_display = (
+            f'<details class="reveal" style="margin:0;padding:0;border:none;">'
+            f'<summary style="font-size:11px;color:var(--derived);">{page_str} &middot; bbox</summary>'
+            f'<div class="evidence-box" style="margin-top:4px;padding:6px 8px;font-size:10.5px;">'
+            f'page: {v.page_no}<br>bbox: {bbox_json}'
+            f'</div></details>'
+        )
+
+        body.append(
+            f'<tr>'
+            f'<td>{field_display}</td>'
+            f'<td>{period_display}</td>'
+            f'<td>{val_display}</td>'
+            f'<td>{evidence_display}</td>'
+            f'</tr>'
+        )
+    body.append('</tbody></table></div></div>')
+
+    # Checksums table
+    if result.checksum_rows:
+        body.append('<div class="panel">')
+        body.append(f'<div class="panel-head"><h3>Validation &amp; Checksums <span class="badge ok">{n_confirmed} of {n_checksums} confirmed</span></h3>'
+                    f'<span class="mono" style="font-size:11px;color:var(--ink-faint)">Digits &amp; Words encoding check</span></div>')
+        body.append('<div class="panel-body flush">')
+        body.append('<table class="reg"><thead><tr>'
+                    '<th>Extracted Phrase</th><th>Digits</th><th>Words Value</th><th>Status</th><th>Evidence</th>'
+                    '</tr></thead><tbody>')
+        for c in result.checksum_rows:
+            page_str = f"p.{c.page_no}" if c.page_no is not None else "p.&mdash;"
+            bbox_json = escape(json.dumps(c.bbox)) if c.bbox else "null"
+
+            if c.state == "CONFIRMED":
+                badge_html = '<span class="badge ok"><span class="dot ok"></span>CONFIRMED</span>'
+            elif c.state == "CONFLICTING":
+                badge_html = '<span class="badge bad"><span class="dot bad"></span>CONFLICTING</span>'
+            else:
+                badge_html = f'<span class="badge neutral"><span class="dot neutral"></span>{escape(c.state)}</span>'
+
+            words_val = escape(str(c.words_value)) if c.words_value is not None else '<span class="val-muted">(abstained)</span>'
+            abstain_str = f"<br>abstain reason: {escape(c.abstain_reason)}" if c.abstain_reason else ""
+
+            evidence_display = (
+                f'<details class="reveal" style="margin:0;padding:0;border:none;">'
+                f'<summary style="font-size:11px;color:var(--derived);">{page_str} &middot; bbox</summary>'
+                f'<div class="evidence-box" style="margin-top:4px;padding:6px 8px;font-size:10.5px;">'
+                f'page: {c.page_no}<br>bbox: {bbox_json}{abstain_str}'
+                f'</div></details>'
+            )
+
+            body.append(
+                f'<tr>'
+                f'<td style="max-width:320px;">{escape(c.raw_value)}</td>'
+                f'<td class="mono">{c.digits_value}</td>'
+                f'<td class="mono">{words_val}</td>'
+                f'<td>{badge_html}</td>'
+                f'<td>{evidence_display}</td>'
+                f'</tr>'
+            )
+        body.append('</tbody></table></div></div>')
+
+    # Overall Document Provenance disclosure
+    latest_run = manifest.get("runs", [{}])[-1] if manifest.get("runs") else {}
+    cc_info = ""
     if result.cross_check:
         cc = result.cross_check
-        html.append(f'<div class="note">P-11 geometric cross-check: docling={cc.docling_pair_count} '
-                    f'geometric={cc.geometric_pair_count} agree={cc.agrees}</div>')
+        cc_info = f"<br><strong>P-11 geometric cross-check:</strong> docling={cc.docling_pair_count} geometric={cc.geometric_pair_count} agree={cc.agrees}"
 
-    html.append(PAGE_TAIL)
-    return "".join(html)
+    body.append(f"""
+    <details class="reveal" style="margin-top:20px;padding-top:16px;">
+      <summary style="font-size:13px;font-weight:600;">Show raw extraction evidence</summary>
+      <div class="evidence-box">
+<strong>SHA256:</strong> {sha256}
+<strong>Source ID:</strong> {escape(manifest.get("source_id", "none"))}
+<strong>Institution Code:</strong> {escape(manifest.get("institution_code", "none"))}
+<strong>Classification Label:</strong> {escape(label)}
+<strong>Canonical URL:</strong> {escape(manifest.get("canonical_url", "none"))}
+<strong>Internal Ingest Run ID:</strong> {escape(latest_run.get("run_id", "none"))}{cc_info}
+      </div>
+    </details>
+    """)
+
+    return render_presentation_shell(
+        title=f"{inst_name} — NIRF Extraction",
+        heading=escape(inst_name),
+        subheading=subheading,
+        content_html="".join(body),
+        active_nav="artifacts",
+        actions_html=actions_html,
+        current_sha8=sha8_current,
+    )
+
+
+
+
+# --------------------------------------------------------------------- #
+# ROUTE 1b -- Institution selector hub
+# --------------------------------------------------------------------- #
+
+@app.route("/institutes")
+def institutes_hub():
+    inst_groups = get_institutions_grouped()
+    n_inst = len(inst_groups)
+    n_docs = sum(len(g["docs"]) for g in inst_groups)
+
+    body = []
+
+    # Summary stats
+    body.append(f"""
+    <div class="stats-row">
+      <div class="stat"><div class="num">{n_inst}</div><div class="lbl">institutions indexed</div></div>
+      <div class="stat"><div class="num">{n_docs}</div><div class="lbl">documents acquired</div></div>
+      <div class="stat"><div class="num">NIRF</div><div class="lbl">framework</div></div>
+    </div>
+    """)
+
+    # Search / filter
+    body.append("""
+    <div style="margin-bottom:20px;display:flex;align-items:center;gap:10px;">
+      <input id="inst-search" type="text" placeholder="Filter institutions..."
+        style="font-family:var(--sans);font-size:13px;padding:8px 14px;border:1px solid var(--rule-strong);
+               border-radius:var(--radius);background:var(--panel);color:var(--ink);width:340px;outline:none;"
+        oninput="filterInstitutions(this.value)">
+      <span id="inst-count" style="font-size:12px;color:var(--ink-soft);"></span>
+    </div>
+    """)
+
+    # Institution cards grid
+    body.append('<div id="inst-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;">')
+    for g in inst_groups:
+        code = g["code"]
+        name = g["name"]
+        docs = g["docs"]
+        first_sha8 = docs[0]["sha8"] if docs else ""
+        n_doc = len(docs)
+
+        # Category chips
+        cats = sorted({d["category"] for d in docs})
+        years = sorted({d["year"] for d in docs})
+        year_range = f"{years[0]}–{years[-1]}" if len(years) > 1 else (years[0] if years else "—")
+
+        cat_badges = "".join(
+            f'<span class="badge neutral" style="font-size:10.5px;padding:2px 7px;">{escape(c)}</span>'
+            for c in cats
+        )
+
+        # Institution type from code
+        if code.startswith("IR-E-"):
+            type_badge = '<span class="badge derived" style="font-size:10px;">Engineering</span>'
+        elif code.startswith("IR-O-"):
+            type_badge = '<span class="badge accent" style="font-size:10px;">Overall</span>'
+        elif code.startswith("IR-M-"):
+            type_badge = '<span class="badge annexure" style="font-size:10px;">Management</span>'
+        else:
+            type_badge = '<span class="badge neutral" style="font-size:10px;">Institution</span>'
+
+        doc_links = " ".join(
+            f'<a href="/artifact/{d["sha8"]}" class="docbtn" style="font-size:11px;padding:4px 9px;">'
+            f'{d["year"]} {d["category"]}</a>'
+            for d in docs
+        )
+
+        body.append(f"""
+        <div class="inst-card" data-name="{escape(name.lower())}"
+          style="background:var(--panel);border:1px solid var(--rule);border-radius:var(--radius);
+                 padding:18px 20px;display:flex;flex-direction:column;gap:12px;
+                 transition:box-shadow .15s,border-color .15s;cursor:default;"
+          onmouseover="this.style.boxShadow='0 3px 12px rgba(0,0,0,0.08)';this.style.borderColor='var(--rule-strong)'"
+          onmouseout="this.style.boxShadow='';this.style.borderColor='var(--rule)'">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+            <div style="font-family:var(--serif);font-weight:600;font-size:14.5px;color:var(--ink);line-height:1.35;">{escape(name)}</div>
+            {type_badge}
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            {cat_badges}
+            <span style="font-size:11px;color:var(--ink-faint);">{year_range}</span>
+          </div>
+          <div style="font-family:var(--mono);font-size:10.5px;color:var(--ink-faint);">{escape(code)}</div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;border-top:1px solid var(--rule);padding-top:12px;">
+            {doc_links}
+          </div>
+        </div>
+        """)
+    body.append("</div>")
+
+    # JS for live filter
+    body.append("""
+    <script>
+    function filterInstitutions(q) {
+      q = q.toLowerCase().trim();
+      var cards = document.querySelectorAll('.inst-card');
+      var shown = 0;
+      cards.forEach(function(c) {
+        var match = !q || c.dataset.name.includes(q);
+        c.style.display = match ? '' : 'none';
+        if (match) shown++;
+      });
+      document.getElementById('inst-count').textContent =
+        q ? shown + ' of ' + cards.length + ' institutions' : '';
+    }
+    </script>
+    """)
+
+    return render_presentation_shell(
+        title="All Institutions — NIRF Benchmarking",
+        heading="All Institutions",
+        subheading=f"{n_inst} institutions · {n_docs} acquired documents · NIRF framework",
+        content_html="".join(body),
+        active_nav="institutes",
+        actions_html='<a class="docbtn" href="/">Inventory Table</a>',
+    )
 
 
 # --------------------------------------------------------------------- #
